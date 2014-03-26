@@ -1,0 +1,58 @@
+\documentclass{beamer}
+
+% Base packages
+\usepackage{fontspec}
+
+\usepackage{xunicode}
+\usepackage{xltxtra}
+
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{longtable}
+\usepackage{csquotes}
+\usepackage{standalone}
+
+\usepackage{graphicx}
+\graphicspath{{./images/}}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows,decorations.pathmorphing,backgrounds,positioning,fit,petri}
+
+\usepackage{listings}
+\lstset{language=C, basicstyle=\ttfamily, breaklines=true, keepspaces=true, keywordstyle=\color{blue}}
+
+% Setup Russian hyphenation
+\usepackage{polyglossia}
+\setdefaultlanguage[spelling=modern]{russian} % for polyglossia
+\setotherlanguage{english} % for polyglossia
+
+% Setup fonts
+\newfontfamily\russianfont{CMU Serif}
+\setromanfont{CMU Serif}
+\setsansfont{CMU Sans Serif}
+\setmonofont{CMU Typewriter Text}
+
+% Be able to insert hyperlinks
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=black, filecolor=black, citecolor=black, urlcolor=blue , pdfauthor=Grigory Rechistov <grigory.rechistov@phystech.edu> and Evgeny Yulyugin <yulyugin@gmail.com>, pdftitle=Программное моделирование вычислительнызх систем}
+% \usepackage{url}
+
+% Misc optional packages
+\usepackage{underscore}
+\usepackage{amsthm}
+
+% A new command to mark not done places
+\newcommand{\todo}[1][]{{\color{red}TODO\ #1}}
+
+\newcommand{\abbr}{\textit{англ.}\ }
+
+\subtitle{Курс «Программное моделирование вычислительных систем»}
+\subject{Лекция}
+\date{\today}
+\pgfdeclareimage[height=0.5cm]{ilab-logo}{../common/ilab-noletters.png}
+\logo{\pgfuseimage{ilab-logo}}
+
+\typeout{Copyright 2014 Grigory Rechistov and Evgeny Yulyugin}
+
+\usetheme{Berlin}
+\setbeamertemplate{navigation symbols}{}%remove navigation symbols
