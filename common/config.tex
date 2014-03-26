@@ -13,10 +13,11 @@
 \usepackage{standalone}
 
 \usepackage{graphicx}
-\graphicspath{{./images/}}
+\graphicspath{{../pictures/}}
 
 \usepackage{tikz}
 \usetikzlibrary{arrows,decorations.pathmorphing,backgrounds,positioning,fit,petri}
+\newcommand{\inputpicture}[1]{\input{../drawings/#1}}
 
 \usepackage{listings}
 \lstset{language=C, basicstyle=\ttfamily, breaklines=true, keepspaces=true, keywordstyle=\color{blue}}
