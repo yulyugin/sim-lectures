@@ -36,6 +36,44 @@
 
 \end{frame}
 
+\section{Яызки разработки моделей}
+
+\begin{frame}{Вопрос}
+
+На каком языке программирования должен быть написан симулятор?
+
+\end{frame}
+
+\begin{frame}{Использование языков общего назначения (C, C++, ...)}
+
+\begin{itemize}
+  \item Используется ООП
+  \item Написание моделей <<с нуля>>
+  \item Особенности языков
+  \begin{itemize}
+    \item Спацифика int (int32\_t, int64\_t)
+    \item thread safety
+    \item malloc/free
+  \end{itemize}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Недостаток}
+
+Низкая скорость разработки!
+
+\end{frame}
+
+\begin{frame}{Решение}
+
+\begin{itemize}
+  \item Создание библиотек, реализующих общие примитивы моделирования (SystemC/TLM).
+  \item Использование специальных языков написания моделей (DML).
+\end{itemize}
+
+\end{frame}
+
 % Use [fragile] option to insert listings
 % \begin{frame}[fragile]
 
