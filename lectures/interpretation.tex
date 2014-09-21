@@ -48,12 +48,80 @@ while (run) {
 \end{lstlisting}
 \end{frame}
 
-\section{Анатомия инструкции}
+\begin{frame}{Уточненный цикл работы}
+\centering
+\resizebox{9cm}{7cm}{
+\inputpicture{interp-cycle-expanded-exception}
+}
+\end{frame}
+
+\section{Fetch}
+
+\begin{frame}{Порядок байт при доступах}
+
+\begin{itemize}
+    \item Порядок от младшего к старшему (\abbr little-endian);
+    \item Порядок от старшего к младшему (\abbr big-endian);
+    \item Смешанный порядок (\abbr middle-endian).
+\end{itemize}
+
+\pause
+
+\begin{table}[htpb]
+    \centering
+    \begin{tabular}{|l|l|}
+    \hline
+    Представление   &   D4 + C3 * 100 + B2 * 10000 + A1 * 1000000   \\
+    \hline
+    Little-endian   &   D4, C3, B2, A1                              \\
+    \hline
+    Big-endian      &   A1, B2, C3, D4                              \\
+    \hline
+    \end{tabular}
+\end{table}
+
+\end{frame}
+
+\begin{frame}{Бит, байт, слово}
+
+Бит \pause --- наименьшая единица информации.
+
+\bigskip
+\pause
+
+Байт \pause --- минимальная адресуемая (в данной архитектуре) единица хранения
+информации.
+
+\bigskip
+\pause
+
+Октет --- восемь бит.
+
+\bigskip
+\pause
+
+Машинное слово \pause --- максимальный объём информации, который ЦПУ может
+обработать единовременно.
+
+\bigskip
+\pause
+
+Intel: word — 16 бит, dword — 32 бит, qword — 64 бит.
+
+\end{frame}
+
+\section{Decode}
 
 \begin{frame}{Анатомия инструкции}
 \centering
 \inputpicture{instruction-anatomy}
 \end{frame}
+
+\section{Execute}
+
+\section{Write Back}
+
+\section{Advance PC}
 
 \section*{Конец}
 % The final "thank you" frame 
