@@ -1,0 +1,40 @@
+% This file allows to produce either a separate PDF/PNG image
+% See standalone documentation to understand underlying magic
+
+\documentclass[tikz,convert={density=150,size=600,outext=.png}]{standalone}
+\usetikzlibrary{shapes, calc, arrows, fit, positioning, decorations, patterns, decorations.pathreplacing, chains, snakes}
+\input{../setup-web-fonts}
+\input{../setup-packages}
+\graphicspath{{../pictures/}} % path to pictures, trailing slash is mandatory.
+
+% The actual drawing follows
+\begin{document}
+
+\tikzstyle{FatArrow} = [thick, decoration={markings,mark=at position
+        1 with {\arrow[semithick]{open triangle 60}}},
+        double distance=1.4pt, shorten >= 5.5pt,
+        preaction = {decorate},
+        postaction = {draw,line width=1.4pt, white,shorten >= 4.5pt}]
+
+\begin{tikzpicture}[font=\footnotesize, >=latex]
+    \huge
+    \node[rectangle, minimum height = 0.5cm] (mnemonic) {mnemonic,};
+    \node[rectangle, right = 0.5cm of mnemonic.east, minimum height = 0.5cm] (src1) {src1,};
+    \node[rectangle, right = 0.5cm of src1.east, minimum height = 0.5cm] (src2) {src2,};
+    \node[rectangle, right = 0.5cm of src2.east, minimum height = 0.5cm] (dst1) {dst1};
+    \node[draw, rectangle, right = 1.5cm of dst1.east, minimum height = 0.5cm] (dst2) {\textcolor{gray}{dst2}};
+
+    \node[draw, fill=green, below = 2cm of mnemonic.south, minimum height = 0.5cm] (opcode) {Код операции};
+    \node[draw, below = 2cm of src2.south, minimum height = 0.5cm] (regs) {Регистры, память, константы};
+    \node[draw, fill=gray, align=center, below = 1.8cm of dst2.south, minimum height = 0.5cm] (flags) {Неявные операнды:\\ флаги, PC};
+
+    \draw[FatArrow] (mnemonic) -- (opcode);
+    \draw[FatArrow] (src1) -- ([xshift = 6.5mm] regs.north west);
+    \draw[FatArrow] (src2) -- (regs);
+    \draw[FatArrow] (dst1) -- ([xshift = -6.7mm] regs.north east);
+    \draw[FatArrow] (dst2) -- (flags);
+
+    \draw (mnemonic.south west) -- (dst1.south east) -- (dst1.north east) -- (mnemonic.north west) -- (mnemonic.south west);
+\end{tikzpicture}
+
+\end{document}

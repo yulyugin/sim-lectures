@@ -22,11 +22,37 @@
 % Use [fragile] option to insert listings
 % \begin{frame}[fragile]
 
-\section{Общий цикл работы процессора}
+\section{Цикл работы процессора}
 
-\begin{frame}
-    \centering
-    \inputpicture{interp-cycle-expanded}
+\begin{frame}{Цикл работы процессора}
+\centering
+\inputpicture{interp-cycle-expanded}
+\end{frame}
+
+\begin{frame}[fragile]{Переключаемый интерпретатор (switched)}
+\begin{lstlisting}
+while (run) {
+    raw_code = fetch(PC);
+    (opcode, operands) = decode(raw_code);
+    switch (opcode) {
+
+    case opcode1:
+        func1(operands); PC++; break;
+
+    case opcode2:
+        func2(operands); PC++; break;
+
+    /*...*/
+    }
+}
+\end{lstlisting}
+\end{frame}
+
+\section{Анатомия инструкции}
+
+\begin{frame}{Анатомия инструкции}
+\centering
+\inputpicture{instruction-anatomy}
 \end{frame}
 
 \section*{Конец}
