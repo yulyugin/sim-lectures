@@ -135,6 +135,26 @@ Intel: word — 16 бит, dword — 32 бит, qword — 64 бит.
 \inputpicture{instruction-anatomy}
 \end{frame}
 
+\begin{frame}[fragile]{Декодирование}
+Задача декодирования --- перевод данных об инструкции из машинного представление
+во внутреннее (высокоуровневое) удобное для последующего анализа.
+
+\pause
+
+Вход: \texttt{\textcolor{red}{0x40} \textcolor{green}{0x05} \textcolor{blue}{0xab 0x12}}
+
+Результат:
+
+\texttt{instruction \{ \\
+~~~~opcode = \textcolor{red}{ADDI}, num\_operands = 2, \\
+~~~~\textcolor{green}{dst = \{type = OP\_REG, reg = R5\}}, \\
+~~~~\textcolor{blue}{src = \{type = OP\_IMM, val = 0x12ab\}}, \\
+~~~~disasm = "addi r5, 0x12ab", \\
+~~~~addr = 0x1234 \\
+\}}
+
+\end{frame}
+
 \section{Execute}
 
 \section{Write Back}
