@@ -1,6 +1,9 @@
 % Compile with XeLaTeX, TeXLive 2013 or more recent
 \input{../common/config}
 
+\newif\ifilab
+\ilabtrue
+
 \title{Моделирование центрального процессора с помощью интерпретации}
 \author[Евгений Юлюгин]{Евгений Юлюгин \\ \small{\href{mailto:yulyugin@gmail.com}{yulyugin@gmail.com}}}
 
@@ -48,12 +51,14 @@ while (run) {
 \end{lstlisting}
 \end{frame}
 
+\ifilab\else
 \begin{frame}{Уточненный цикл работы}
 \centering
 \resizebox{9cm}{7cm}{
 \inputpicture{interp-cycle-expanded-exception}
 }
 \end{frame}
+\fi
 
 \section{Fetch}
 
@@ -157,7 +162,37 @@ Intel: word — 16 бит, dword — 32 бит, qword — 64 бит.
 
 \section{Execute}
 
+\begin{frame}{Исполнение}
+
+Базовая единица --- функция-эмулятор одной инструкции (service routine).
+
+\bigskip
+
+s.r. пишутся на языке высокого уровня --- переносимость кода между хозяйскими
+платформами, компиляторами.
+
+\bigskip
+
+Используются генераторы кода.
+
+Пример: SimGen --- из одного описания генерируются декодер, дизассемблер и s.r.
+
+\end{frame}
+
 \section{Write Back}
+
+\begin{frame}{Запись результата в память}
+
+<<Обычная>> запись в память:
+
+\begin{itemize}
+    \item Невыровненные аддрес,
+    \item Граница страниц,
+    \item Попытка изменить регион памяти доступный только для чтения,
+    \item Часть результата может быть записана, а потом случится исключение.
+\end{itemize}
+
+\end{frame}
 
 \section{Advance PC}
 
