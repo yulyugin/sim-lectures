@@ -136,7 +136,7 @@ Intel: word — 16 бит, dword — 32 бит, qword — 64 бит.
 \inputpicture{instruction-anatomy}
 \end{frame}
 
-\begin{frame}[fragile]{Декодирование}
+\begin{frame}{Декодирование}
 Задача декодирования --- перевод данных об инструкции из машинного представление
 во внутреннее (высокоуровневое) удобное для последующего анализа.
 
@@ -154,6 +154,20 @@ Intel: word — 16 бит, dword — 32 бит, qword — 64 бит.
 ~~~~addr = 0x1234 \\
 \}}
 
+\end{frame}
+
+\begin{frame}{Декодирование}
+Код декодера редко пишется вручную, он генерируется по описанию:
+
+\texttt{\textcolor{red}{A5} \textcolor{blue}{Y}\textcolor{green}{X} 0\textcolor{orange}{Z} 00} $\Rightarrow$ \textcolor{red}{MOD} \textcolor{green}{RX}, \textcolor{blue}{RY}, \textcolor{orange}{RZ}
+
+\pause\bigskip
+
+В общем случае классическаяя задача построения  синтаксического анализатора.
+
+\pause\bigskip
+
+Пример декодера --- XED (x86 encoder-decoder) \url{https://software.intel.com/sites/landingpage/pintool/docs/61206/Xed/html/}.
 \end{frame}
 
 \section{Execute}
