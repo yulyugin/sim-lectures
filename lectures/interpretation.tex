@@ -245,19 +245,6 @@ s.r. пишутся на языке высокого уровня --- перен
 
 \end{frame}
 
-\begin{frame}{Инструкции для реализации}
-
-\begin{enumerate}
-    \item MULI RX, HHLL;
-    \item XOR RX, RY;
-    \item ADD RX, RY;
-    \item SUB RX, RY;
-    \item CMPI RX, HHLL;
-    \item AND RX, RY, RZ.
-\end{enumerate}
-
-\end{frame}
-
 \begin{frame}[fragile]{Тестирование}
 
 \texttt{test/chip16/unit-tests/nop/s-nop.py}
@@ -281,7 +268,17 @@ test_nop_availability(conf.chip0)
 \end{lstlisting}
 
 Запуск: \texttt{> bin/test-runner test/chip16/unit-tests/nop}
+\end{frame}
 
+\begin{frame}{Инструкции для реализации}
+\begin{enumerate}
+    \item MULI RX, HHLL;
+    \item XOR RX, RY;
+    \item ADD RX, RY;
+    \item SUB RX, RY;
+    \item CMPI RX, HHLL;
+    \item AND RX, RY, RZ.
+\end{enumerate}
 \end{frame}
 \fi
 
