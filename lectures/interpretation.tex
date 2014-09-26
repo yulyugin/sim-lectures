@@ -15,8 +15,10 @@
 
 \section*{Обзор}
 
+\ifilab\else
 \begin{frame}{На прошлой лекции}
 \end{frame}
+\fi
 
 \begin{frame}{На этой лекции}
 \tableofcontents
@@ -70,11 +72,9 @@ while (run) {
 
 \begin{itemize}
     \item Невыровненный (\abbr unaligned) адрес в памяти. \\
-    \pause
     Вызывает эффекты в некоторых архитектурах.
-    \pause
+    \pause\bigskip
     \item Доступ на границе двух страниц памяти. \\
-    \pause
     Разные страницы могут иметь разные характеристики.
 \end{itemize}
 
@@ -109,25 +109,21 @@ while (run) {
 
 Бит \pause --- наименьшая единица информации.
 
-\bigskip
-\pause
+\pause\bigskip
 
 Байт \pause --- минимальная адресуемая (в данной архитектуре) единица хранения
 информации.
 
-\bigskip
-\pause
+\pause\bigskip
 
 Октет --- восемь бит.
 
-\bigskip
-\pause
+\pause\bigskip
 
 Машинное слово \pause --- максимальный объём информации, который ЦПУ может
 обработать единовременно.
 
-\bigskip
-\pause
+\pause\bigskip
 
 Intel: word — 16 бит, dword — 32 бит, qword — 64 бит.
 
@@ -185,8 +181,10 @@ s.r. пишутся на языке высокого уровня --- перен
 
 <<Обычная>> запись в память:
 
+\pause
+
 \begin{itemize}
-    \item Невыровненные аддрес,
+    \item Невыровненные адрес,
     \item Граница страниц,
     \item Попытка изменить регион памяти доступный только для чтения,
     \item Часть результата может быть записана, а потом случится исключение.
@@ -194,13 +192,30 @@ s.r. пишутся на языке высокого уровня --- перен
 
 \end{frame}
 
-\section{Advance PC}
+\section{Advance \texttt{PC}}
+
+\begin{frame}{Продвижение \texttt{\$PC}}
+
+\begin{itemize}
+    \item Для большинства команд увеличение счетчика на длину обработанной инструкции. \\
+    Ислючение: \texttt{REP MOVS}.
+    \bigskip
+    \item Явное изменение \texttt{\$PC} --- команды управления исполнением:
+    \begin{itemize}
+        \item (Un)conditional (In)direct Jump/Branch
+        \item Call/Return (subroutine)
+    \end{itemize}
+\end{itemize}
+
+\end{frame}
 
 \section*{Конец}
 % The final "thank you" frame 
 
+\ifilab\else
 \begin{frame}{На следующей лекции}
 \end{frame}
+\fi
 
 \begin{frame}
 
