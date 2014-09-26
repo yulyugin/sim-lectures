@@ -199,15 +199,77 @@ s.r. пишутся на языке высокого уровня --- перен
 \begin{itemize}
     \item Для большинства команд увеличение счетчика на длину обработанной инструкции. \\
     Ислючение: \texttt{REP MOVS}.
-    \bigskip
+    \pause\bigskip
     \item Явное изменение \texttt{\$PC} --- команды управления исполнением:
     \begin{itemize}
-        \item (Un)conditional (In)direct Jump/Branch
-        \item Call/Return (subroutine)
+        \item (Un)conditional (In)direct Jump/Branch,
+        \item Call/Return (subroutine).
     \end{itemize}
 \end{itemize}
 
 \end{frame}
+
+\ifilab
+\section{Практика}
+
+\begin{frame}{Структура кода}
+
+Файл \texttt{modules/chip16/chip16.h}
+
+\texttt{struct chip16\_t;} --- состояние процессора.
+
+\pause\bigskip
+
+Файл \texttt{modules/chip16/chip16.c}
+
+Функции:
+
+\begin{itemize}
+    \item chip16\_string\_decode --- дизассемблер,
+    \item chip16\_execute --- декодирование и исполнение.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Инструкции для реализации}
+
+\begin{enumerate}
+    \item MULI RX, HHLL;
+    \item XOR RX, RY;
+    \item ADD RX, RY;
+    \item SUB RX, RY;
+    \item CMPI RX, HHLL;
+    \item AND RX, RY, RZ.
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}[fragile]{Тестирование}
+
+\texttt{test/chip16/unit-tests/nop/s-nop.py}
+
+\begin{lstlisting}[language=python, basicstyle=\scriptsize]
+# This test checks NOP instruction
+import stest
+
+cli.run_command("run-python-file %s/targets/chip16/machine.py" % conf.sim.workspace)
+
+def test_nop_availability(cpu):
+    paddr = 0
+    cpu.pc = paddr
+    # NOP
+    simics.SIM_write_phys_memory(cpu, paddr, 0, 4)
+    SIM_continue(1)
+    stest.expect_equal(cpu.pc, paddr + 4)
+    print "NOP: success"
+
+test_nop_availability(conf.chip0)
+\end{lstlisting}
+
+Запуск: \texttt{> bin/test-runner test/chip16/unit-tests/nop}
+
+\end{frame}
+\fi
 
 \section*{Конец}
 % The final "thank you" frame 
