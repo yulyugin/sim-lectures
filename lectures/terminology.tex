@@ -1,0 +1,192 @@
+% Compile with XeLaTeX, TeXLive 2013 or more recent
+\input{../common/config}
+
+\title{Общие свойства симуляторов}
+\author[Евгений Юлюгин]{Евгений Юлюгин \\ \small{\href{mailto:yulyugin@gmail.com}{yulyugin@gmail.com}}}
+
+\begin{document}
+
+\begin{frame}
+    \maketitle
+\end{frame}
+
+\begin{frame}
+    \tableofcontents
+\end{frame}
+
+\section{Требования}
+
+\begin{frame}{На прошлой лекции}
+Симуляторы
+\begin{itemize}
+\item сократили длительность цикла проектирования вычислительных систем
+\item увеличили эффективность труда проектировщика
+\item стали незаменимы при совместной разработке аппаратуры и программного обеспечения
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Вопросы}
+\begin{itemize}
+\item Что такое функциональный симулятор режима приложения?\pause 
+\item Почему программы и аппаратуру необходимо разрабатывать совместно?\pause
+\item Может ли Dosbox загрузить Windows? \pause Да, если это Win 3.1
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}{Требования к симуляторным решениям}
+\begin{itemize}
+\item Точность
+\item Скорость
+\item Совместимость
+\end{itemize}
+\end{frame}
+
+\section{Точность}
+
+\begin{frame}{Точность}
+
+\begin{flushright}
+\tiny{Essentially, all models are wrong, but some are useful. \textit{G. E. P. Box, N. R. Draper}}
+\end{flushright}
+
+\begin{itemize}
+\item Точность должна быть достаточной для выполнения целей, поставленных перед симулятором
+\item Излишняя точность — медленная работа, дольше разработка, больше ошибок
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Откуда берутся данные для создания модели}
+
+\begin{itemize}
+\item По спецификациям, документации: SDM, EAS, BWG\dots
+\item Из предыдущей модели + спецификации
+\item Из анализа работы реальной аппаратуры (reverse engineering)
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Как проверить корректность модели?}
+
+\begin{itemize}
+\item Функциональная корректность
+\item Адекватность результатов
+\item Сравнение с другой моделью этого же устройства
+\item Сравнение с реальной аппаратурой
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Как \textit{доказать} корректность модели?}
+
+\begin{itemize}
+\item Формальная верификация
+\item Не всегда возможна
+\item Огромное число состояний: длина одной инструкции IA-32 до 15 байт, а это $2^{120}$ комбинаций входных значений
+\end{itemize}
+\end{frame}
+
+\section{Скорость}
+
+\begin{frame}{Скорость}
+\begin{itemize}
+\item MIPS — миллионы гостевых инструкций, исполненных за одну хозяйскую секунду
+\item МГц — число гостевых тактов, исполненных за одну хозяйскую секунду
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Скорость как замедление}
+Slowdown. Сравнение с физической системой со сходными параметрами и исполняющей аналогичный сценарий
+\begin{itemize}
+\item Необходима реальная система, с которой можно сравниваться
+\item Специальный случай: целевая архитектура = хозяйская % «»
+\item Чаще всего модель работает медленнее аппаратуры
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Замедление разных типов симуляции}
+\begin{tabular}{rl}
+\textbf{Тип модели}                    & \textbf{Замедление} \\
+Функциональная с аппаратным ускорением & $1$\dots$5$ \\
+Функциональная с двоичной трансляцией  & $10$\dots$100$ \\
+Функциональная с интерпретацией        & $100$\dots$10^3$ \\
+Потактовая                             & $10^3$\dots$10^6$ \\
+\end{tabular}
+
+\end{frame}
+
+
+\begin{frame}{Как повысить скорость симулятора?}
+\begin{itemize}
+\item Это мы будем обсуждать на многих последующих занятиях
+\item Эффективная симуляция и бездействие, аппаратная поддержка, параллельное исполнение\dots
+\end{itemize}
+\end{frame}
+
+\section{Совместимость}
+
+\begin{frame}{Совместимость}
+\begin{itemize}
+\item Отладчики, среды разработки, анализаторы трасс
+\item Форматы: образов дисков и памяти, трасс
+\item Автоматизация и расширяемость с помощью динамических языков: Perl, Python, Lua\dots
+\item Автоматическая работа без человеческого вмешательства: без GUI, для регулярного тестирования
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Структура симулятора}
+\begin{itemize}
+\item Симуляционное ядро
+\item Интерфейс командной строки
+\item Графический интерфейс
+\item Интерпретатор скриптов
+\item Публичный API
+\end{itemize}
+\end{frame}
+
+\section{Итоги}
+
+\begin{frame}{Итоги}
+\begin{itemize}
+\item Точность
+\item Скорость
+\item Расширяемость
+\end{itemize}
+\end{frame}
+
+\begin{frame}{На следующей лекции}
+\begin{itemize}
+\item Интерпретация
+\end{itemize}
+\end{frame}
+
+% \section{Литература}
+
+% \begin{frame}[allowframebreaks]{Литература}
+% \begin{thebibliography}{99}
+    % \bibitem{simbook} Программное моделирование вычислительных систем (лекции). \url{http://atakua.doesntexist.org/public/archive/simcourse/simulation-lectures-latest.pdf}
+
+    % \bibitem{practicum} Лабораторный практикум по программному моделированию.  \url{http://atakua.doesntexist.org/public/archive/simcourse/simulation-practicum-latest.pdf}
+
+% \end{thebibliography}
+% \end{frame}
+
+
+% The final "thank you" frame
+\begin{frame}
+
+{\huge{Спасибо за внимание!}\par}
+
+\vfill
+
+Слайды и материалы курса доступны по адресу \url{http://is.gd/ivuboc} % http://atakua.doesntexist.org/wordpress/simulation-course-russian/
+
+\vfill
+
+\tiny{\textit{Замечание}: все торговые марки и логотипы, использованные в данном материале, являются собственностью их владельцев. Представленная точка зрения отражает личное мнение автора.
+%Материалы доступны по лицензии Creative Commons Attribution-ShareAlike (Атрибуция — С сохранением условий) 4.0 весь мир (в т.ч. Россия и др.). Чтобы ознакомиться с экземпляром этой лицензии, посетите \url{http://creativecommons.org/licenses/by-sa/4.0/}
+}
+
+\end{frame}
+
+\end{document}
