@@ -1,0 +1,276 @@
+\input{../common/config}
+\title{Виртуализация}
+\author[Евгений Юлюгин]{Евгений Юлюгин \\ \small{\href{mailto:yulyugin@gmail.com}{yulyugin@gmail.com}}}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}
+\tableofcontents
+\end{frame}
+
+\begin{frame}{На прошлых лекциях}
+\begin{itemize}
+\item Симуляция —  моделирование системы через имитацию внешне видимых эффектов, возникающих при взаимодействии с ней
+\item Эмуляция — моделирование системы через имитацию внутренней структуры и процессов, происходящих внутри её подсистем
+\item Виртуализация — обеспечение эффективной изоляции нескольких систем друг от друга при одновременном и прозрачном доступе к ресурсам нижележащей системы
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Связь виртуализации и симуляции}
+
+\centering
+\inputpicture{simulation-levels}
+
+\vfill
+
+\inputpicture{multiplexing}
+
+\end{frame}
+
+\begin{frame}{История}
+\begin{itemize}
+\item IBM VM — 1960 гг. \cite{goldberg}
+\item VMware Workstation — 1998 г.
+\item Intel VT-x, VT-i — 2005 г.
+% \item 
+\end{itemize}
+
+
+\end{frame}
+
+\section{Классические условия виртуализации}
+
+\begin{frame}{Необходимые свойства}
+
+\begin{enumerate}
+\item Изоляция — каждая виртуальная машина должна иметь доступ только к тем ресурсам, которые были ей назначены
+\item Эквивалентность — любая программа, исполняемая под управлением ВМ, должна демонстрировать поведение, полностью идентичное реальной системе, за исключением эффектов, связанных с объёмами ресурсов
+\item Эффективность — «статистически преобладающее подмножество инструкций виртуального процессора должно исполняться напрямую хозяйским процессором, без вмешательства монитора ВМ»
+\end{enumerate}
+
+\end{frame}
+
+\subsection{Определения}
+
+\begin{frame}{Модель}
+
+\begin{itemize}
+\item Один процессор, исполняющий инструкции
+\item Состояние: (M, P, R)
+\item Два режима M: u и s
+\item Указатель текущей инструкции P
+\item Границы сегмента памяти R (l, b)
+\item Оперативная память: линейная E с ячейками E[n]
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{События ловушки (trap)}
+\begin{itemize}
+\item Вызванные попыткой изменить состояние
+процессора (потока управления)
+\item Вызванные механизмом защиты памяти (ловушка з.п.)
+
+\item E[0] ← (M1,P1,R1)
+\item (M2,P2,R2) ← E[1]
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Инструкции}
+\begin{itemize}
+    \item Привилегированные (privileged). Исполнение с M=u всегда вызывает ловушку потока управления
+    \item Служебные (sensitive)
+    \begin{itemize}
+        \item Инструкции, исполнение которых закончилось без ловушки защиты памяти и вызвало изменение M и/или R
+        \item Инструкции, поведение которых в случаях, когда они не вызывают ловушку защиты памяти, зависит или от режима M, или от значения R
+    \end{itemize}
+    \item Безвредные (innocuous) — не служебные
+\end{itemize}
+\end{frame}
+
+\subsection{Достаточное условие}
+
+\begin{frame}{Достаточное условие}
+
+Множество служебных инструкций является подмножеством привилегированных инструкций
+
+\centering
+\inputpicture{vm-sufficient-condition} 
+\end{frame}
+
+\begin{frame}{Построение}
+\begin{itemize}
+    \item Программы ВМ исполняют безобидные инструкции напрямую
+    \item Служебные инструкции вызывают ловушку → переход в монитор, который их эмулирует
+    \item Привилегированные инструкции (ОС внутри ВМ) → ловушка
+\end{itemize}
+
+\centering$\Downarrow$
+
+\begin{enumerate}
+    \item Изоляция
+    \item Эквивалентность
+    \item Эффективность
+\end{enumerate}
+\end{frame}
+
+\section{Современные корректировки}
+
+\begin{frame}{Что не упомянуто в условии Г. и П.}
+
+\begin{itemize}
+    \item Сложные схемы трансляции адресов
+    \item Периферия
+    \item Многопроцессорные системы
+\end{itemize}
+\end{frame}
+
+\subsection{Трансляция адресов}
+
+\begin{frame}[shrink=20]{Трансляция адресов}
+\centering
+\inputpicture{two-level-translation} 
+\end{frame}
+
+\begin{frame}{Виртуализация TLB}
+\begin{center}
+\begin{tabular}{rrr}
+Виртуальный адрес & Физический адрес & Тэг\\
+0x11112222000 &  0x22220000 & VM1\\
+0x11112222000 &  0x11110000 & VM2\\
+0x44443333000 &  0x55554000 & MON\\
+0xabcd9876000 &  0x00001000 & VM1\\
+0xabcd9876000 &  0x11111000 & VM3
+ \end{tabular}
+\end{center}
+\end{frame}
+
+\subsection{Периферийные устройства}
+
+\begin{frame}{Периферийные устройства}
+\begin{itemize}
+    \item Кому доставлять прерывание?
+    \item Что делать, если прерывания внутри ВМ запрещены?
+\end{itemize}
+
+\vfill
+\centering
+\begin{tikzpicture}[>=latex, font=\small, align=center]
+    \node[draw] (dev) {Устройство};
+
+    \node[draw, rounded corners, right=2cm of dev, text width=2.2cm] (vmm) {Монитор ВМ};
+    \node[draw, rounded corners, below = 0.5 cm of vmm, text width=2.2cm] (vm1) {ВМ 1};
+    \node[draw, rounded corners, below = 0.5cm of vm1, text width=2.2cm] (vm2) {ВМ 2};
+
+    \node[draw, left=0.5cm of vm1, cloud] (sel) {?};
+
+    \draw[->] (dev) |- (sel);
+    \draw[->] (sel) -- (vmm);
+    \draw[->] (sel) -- (vm1);
+    \draw[->] (sel) -- (vm2);
+\end{tikzpicture}
+
+\end{frame}
+
+\begin{frame}{Консервативный подход}
+\begin{itemize}
+    \item Все прерывания доставляются монитору
+    \item Монитор «впрыскивает» их в ВМ
+    \item Повышенная задержка доставки прерываний
+\end{itemize}
+
+\vfill
+\centering
+\begin{tikzpicture}[>=latex, font=\small, align=center]
+    \node[draw] (dev) {Устройство};
+
+    \node[draw, rounded corners, right=2cm of dev, text width=2.2cm] (vmm) {Монитор ВМ};
+    \node[draw, rounded corners, below = 0.5 cm of vmm, text width=2.2cm] (vm1) {ВМ 1};
+    \node[draw, rounded corners, below = 0.5cm of vm1, text width=2.2cm] (vm2) {ВМ 2};
+
+    \draw[->] (dev) -- (vmm);
+    \draw[->] (vmm) -- (vm1);
+\end{tikzpicture}
+
+\end{frame}
+
+\begin{frame}{Аппаратная поддержка}
+Аппаратура обеспечивает доставку выбранных прерываний в текущую ВМ, остальные — в монитор
+
+\vfill
+\centering
+\begin{tikzpicture}[>=latex, font=\small, align=center]
+    \node[draw] (dev) {Устройство};
+
+    \node[draw, rounded corners, right=2.5cm of dev, text width=2.2cm] (vmm) {Монитор ВМ};
+    \node[draw, rounded corners, below = 0.5 cm of vmm, text width=2.2cm] (vm1) {ВМ 1};
+    \node[draw, rounded corners, below = 0.5cm of vm1, text width=2.2cm] (vm2) {В М 2};
+
+    \node[draw, left=1.5cm of vm1, trapezium, shape border rotate=270] (sel) {HW};
+
+    \draw[->] (dev) |- (sel);
+    \draw[->] (sel) -- (vmm.west) node[above, midway, font=\tiny, xshift=-0.25cm] {Остальные\\прерывания};
+    \draw[->] (sel) -- (vm1) node[below, midway, font=\tiny ] {Разрешённые\\прерывания};
+\end{tikzpicture}
+
+
+\end{frame}
+
+\subsection{Многопроцессорность}
+
+\begin{frame}{Многопроцессорность}
+\begin{itemize}
+    \item Планировка исполнения $N$ виртуальных процессоров на $M$ физических, $N \geqslant M$
+    \begin{itemize}
+        \item Справедливая (fair)
+        \item Эффективная — характерные длительности синхронизационных процессов внутри ВМ должны быть близки к наблюдаемым на реальной аппаратуре
+    \end{itemize}
+\end{itemize}
+
+\begin{itemize}
+    \item Проблема вытеснения потоков, заблокировавших ресурсы (lock holder preemption)
+    \item Монитору необходимо детектировать новый класс гостевых инструкций — синхронизационные примитивы (атомарные инструкции)
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[allowframebreaks]{Рекомендуемая литература}
+\begin{thebibliography}{99}
+\bibitem{goldberg} Popek Gerald J., Goldberg Robert P. Formal requirements for virtualizable third generation architectures // Communications of the ACM. V. 17. \#7. 1974.
+\bibitem{vtx} Leung, F. [et al.] Intel® Virtualization Technology // ITJ Vol 10 Issue 3 — 2006.
+\bibitem{mpr} Harlan McGhan. The gHost in the Machine: Parts 1,2,3 // Microprocessor Report. 2007. \url{http://mpronline.com}
+\bibitem{virt-locks} Jiannan Ouyang and John R. Lange. Preemptable ticket spinlocks: improving consolidated performance in the cloud — 2013 \url{https://labs.vmware.com/vee2013/docs/p191.pdf}
+\bibitem{my-virt} Аппаратная виртуализация. Теория, реальность и поддержка в архитектурах процессоров \url{http://habrahabr.ru/company/intel/blog/196444/}
+\end{thebibliography}
+\end{frame}
+
+
+\begin{frame}{На следующей лекции}
+\centering
+
+Паравиртуализация
+
+\end{frame}
+
+
+\begin{frame}
+
+{\huge{Спасибо за внимание!}\par}
+
+\vfill
+
+Слайды и материалы курса доступны по адресу \url{http://is.gd/ivuboc} % http://atakua.doesntexist.org/wordpress/simulation-course-russian/
+
+\vfill
+
+\tiny{\textit{Замечание}: все торговые марки и логотипы, использованные в данном материале, являются собственностью их владельцев. Представленная здесь точка зрения отражает личное мнение автора, не выступающего от лица какой-либо организации.}
+
+\end{frame}
+
+\end{document}
