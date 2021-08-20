@@ -1,4 +1,8 @@
+ifeq ($(OS), Windows_NT)
+UNAME := Windows_NT
+else
 UNAME := $(shell uname)
+endif
 
 .DELETE_ON_ERROR:
 
