@@ -1,0 +1,193 @@
+\input{../common/config}
+\title{Потактовая симуляция}
+\author[Евгений Юлюгин]{Евгений Юлюгин \\ \small{\href{mailto:yulyugin@gmail.com}{yulyugin@gmail.com}}}
+
+\begin{document}
+
+\begin{frame}
+    \maketitle
+\end{frame}
+
+\begin{frame}
+    \tableofcontents
+\end{frame}
+
+\begin{frame}{На прошлой лекции}
+\begin{itemize}
+    \item Модель, управляемая исполнением (функциональная модель)
+    \item Модель, управляемая событиями (DES)\pause
+    \item \textbf{Модель, моделирующая каждый такт} (time-stepped)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Вопросы}
+\begin{itemize}
+\item Можно ли симулировать процессор через события?\pause
+\item В чём опасности излишне большоей квоты симуляции многопроцессорной системы?\pause
+\item Можно ли иметь две очереди событий в одной симуляции?
+\end{itemize}
+
+\end{frame}
+
+\section{Потактовая модель}
+
+\begin{frame}{Что моделируем}
+\centering
+
+\includegraphics[width=\textwidth]{./mips-arch}
+
+\tiny{\url{http://commons.wikimedia.org/wiki/File:MIPS_Architecture_(Pipelined).svg}}
+\end{frame}
+
+\begin{frame}{Проблемы}
+\begin{itemize}
+    \item Функциональная модель — не работает (слишком грубая)
+    \item DES — применима, но неудобная абстракция
+\end{itemize}
+
+\inputpicture{des-long}
+
+\end{frame}
+
+\begin{frame}{Особенности}
+
+\inputpicture{features}
+\end{frame}
+
+\begin{frame}{Проблемы}
+\begin{itemize}
+\item Длительность одной операции у разных узлов могут быть различными
+\item Как проверять готовность «медленных» узлов?
+\item Результаты обработки данных должны появляться не ранее, чем на такте, следующим за текущим
+% \item Нельзя в произвольном порядке обновлять состояние блоков
+\end{itemize}
+
+\end{frame}
+
+\section{Функции и порты}
+
+\begin{frame}{Решение}
+Отделим:
+    \begin{itemize}
+    \item Функции узлов
+    \item Время, затрачиваемое на их выполнение
+    \item Внутреннее состояние узлов
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Функциональный элемент}
+Результат готов «мгновенно» при наличии входных данных
+
+\vfill
+\centering
+\inputpicture{pure-function}
+
+\end{frame}
+
+\begin{frame}{Порт}
+Очередь фиксированной задержки
+
+Ширина $N$ бит, задержка 1 такт
+
+\vfill
+\centering
+\inputpicture{delay-line}
+
+\end{frame}
+
+\begin{frame}{Правило соединения}
+
+\begin{itemize}
+\item Функции не могут соединяться непосредственно друг с другом
+\item Чередующиеся фазы симуляции:
+\begin{enumerate}
+    \item симуляция функций;
+    \item симуляция передачи результатов
+\end{enumerate}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Модель с портами: фаза 1}
+
+\centering
+\inputpicture{cycle-phase1}
+
+\end{frame}
+
+\begin{frame}{Модель с портами: фаза 2}
+
+\centering
+\inputpicture{cycle-phase2}
+
+\end{frame}
+
+
+\section{Детали реализации}
+
+\begin{frame}{Готовность данных}
+
+\centering
+\inputpicture{valid}
+
+\end{frame}
+
+\begin{frame}{Могут ли функциональные элементы иметь память?}
+
+\centering
+\inputpicture{state-storing}
+
+\end{frame}
+
+\begin{frame}{Композиция узлов}
+
+\centering
+\inputpicture{ports-compose}
+
+\end{frame}
+
+\begin{frame}{Связь функциональной и потактовой моделей}
+
+\centering\includegraphics[width=0.8\textwidth]{functional-cycle-precise-connection}
+
+\end{frame}
+
+% \begin{frame}{Диаграмма моделируемой системы}
+% 
+% \end{frame}
+
+
+\begin{frame}[allowframebreaks]{Литература}
+\begin{thebibliography}{99}
+    \bibitem{patterson-hennessy} Дэвид Паттерсон и Джон Хэннесси. Архитектура компьютера и проектирование компьютерных
+систем. 4-е изд. Питер, 2012.
+
+\bibitem{Asim} Joel Emer, Pritpal Ahuja, Eric Borch, Artur Klauser, Chi-Keung Luk, Srilatha Manne, Shubhendu S. Mukherjee,
+Harish Patil, Steven Wallace, Nathan Binkert, Roger Espasa, Toni Juan. Asim: A Performance Model Framework // Computer 35 (2002), p. 68–76.
+
+\bibitem{baida} Ю.В. Байда. Методы разработки и тестирования аппаратных потактовых моделей микропроцессоров на программируемых логических интегральных схемах. Дисс. к.т.н. — 2013
+\end{thebibliography}
+\end{frame}
+
+\begin{frame}{На следующей лекции}
+\centering
+
+Параллельная симуляция, управляемая исполнением (MPonMP)
+
+\end{frame}
+
+
+\begin{frame}
+
+{\huge{Спасибо за внимание!}\par}
+
+\vfill
+
+Слайды и материалы курса доступны по адресу \url{http://is.gd/ivuboc} % http://atakua.doesntexist.org/wordpress/simulation-course-russian/
+
+\vfill
+
+\tiny{\textit{Замечание}: все торговые марки и логотипы, использованные в данном материале, являются собственностью их владельцев. Представленная здесь точка зрения отражает личное мнение автора, не выступающего от лица какой-либо организации.}
+
+\end{frame}
+
+\end{document}

@@ -1,0 +1,274 @@
+\input{../common/config}
+\title{Прямое исполнение}
+\author[Евгений Юлюгин]{Евгений Юлюгин \\ \small{\href{mailto:yulyugin@gmail.com}{yulyugin@gmail.com}}}
+
+\begin{document}
+
+\begin{frame}
+    \maketitle
+\end{frame}
+
+\begin{frame}
+    \tableofcontents
+\end{frame}
+
+
+\begin{frame}{На прошлой лекции}
+\begin{itemize}
+\item Интерпретаторы — медленная шутка
+\item Двоичная трансляция быстрее, потому что вычисляет «меньше»
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Вопросы}
+\begin{itemize}
+\item ЯВО → маш. код — компиляция. Маш.~код → маш.~код — ДТ. А что такое маш.~код → ЯВО?\pause{} Декомпиляция\pause
+\item А ЯВО → ЯВО?\pause{} Source-level компилятор\pause
+\item В каких случаях ДТ будет медленнее интерпретации на одной и той же гостевой программе? \pause Если часто происходят ретрансляции, например, программа полна SMC
+\end{itemize}
+
+\end{frame}
+
+% «»
+
+\section{Прямое исполнение}
+
+\begin{frame}{Когда применимо прямое исполнение}
+Идея: не симулировать код вообще! Direct execution, DEX
+\begin{itemize}
+\item Когда гостевая ISA совпадает с хозяйской
+\item Ну или почти совпадает
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{Алгоритм}
+\begin{verbatim}
+execute() {
+    save_host_ctx();
+    set_guest_ctx();
+    setjmp(back);
+    goto guest_start_ip;
+    back: restore_host_ctx();
+}
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{Почему это не будет работать}
+\begin{itemize}
+\item Не полностью совпадающие ISA
+\item Различное положение внешних ресурсов (устройств и памяти)
+\item Привилегированность некоторых инструкций
+\item Необходимость изоляции симулятора от обнаружения и разрушения гостем
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Почему это не будет работать}
+
+\texttt{add \%r1, \%r2} \hfill OK
+
+\texttt{mul \$10, \%r3}
+
+\texttt{sub \%r11, \%r1}
+
+\texttt{mov \$16, \%r13}
+
+\medskip
+
+\texttt{\textcolor{red}{div} \%r4, \%r5} \hfill Отсутствующая в хозяине инструкция
+
+\medskip
+
+\texttt{ld (\textcolor{red}{0xa000}), \%r10} \hfill Другое расположение в памяти
+
+\texttt{st \%r10, (\%r11)}
+
+\medskip
+
+\texttt{mov \%r13, \textcolor{red}{\%cr0}} \hfill Привилегированные инструкции
+
+\texttt{\textcolor{red}{trap} \$32}
+
+\end{frame}
+
+\section{Предпросмотр}
+
+\begin{frame}{Предпросмотр кода}
+
+\begin{itemize}
+\item Инспектирование гостевого кода на предмет «опасных» инструкций перед исполнением
+\item Замена части инструкций на контролируемые — \textit{инструментация}
+\item «Почти» двоичная трансляция
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Заплатки и заглушки}
+\begin{tabular}{ll}
+Исходный код                    &    Код после инструментации \\
+\texttt{add \%r1, \%r2}         &    \texttt{add \%r1, \%r2} \\
+\texttt{mul \$10, \%r3}         &    \texttt{mul \$10, \%r3} \\
+\texttt{div \%r4, \%r5}         &    \texttt{trap \$255} \\
+\texttt{ld (0xa000), \%r10}     &    \texttt{ld (0xb000), \%r10} \\
+\texttt{st \%r10, (\%r11)}      &    \texttt{st \%r10, (\%r11)} \\
+\texttt{sub \%r11, \%r1}        &    \texttt{sub \%r11, \%r1} \\
+\texttt{mov \$16, \%r13}        &    \texttt{mov \$16, \%r13} \\
+\texttt{mov \%r13, \%cr0}       &    \texttt{trap \$255} \\
+\texttt{trap \$32}              &    \texttt{trap \$255} \\
+\end{tabular}
+
+\vfill
+stub — заглушка, patch — заплатка
+
+\end{frame}
+
+\begin{frame}{Двоичная инструментация}
+Общее название для методик исследования и модификации приложений
+
+\begin{itemize}
+\item Pin \url{http://pintool.org}
+\item DynamoRIO \url{http://dynamorio.org}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{Сложности DEX}
+
+\begin{itemize}
+\item Необходимость предпросмотра негативно влияет на производительность симуляции
+\item Необходимость контролировать возможность самомодификации кода
+\item Переменная длина инструкций усложняет установку заплаток и заглушек
+\item Необходимость гарантировать, что управление вернётся из гостя в симулятор
+\end{itemize}
+\end{frame}
+
+\section{Аппаратная поддержка}
+
+\begin{frame}{Аппаратная поддержка прямого исполнения}
+\begin{itemize}
+    \item Набор интерфейсов аппаратуры хозяйской системы, предназначенных для упрощения DEX
+    \item Аппаратная поддержка типичных операций: загрузка гостевого состояния, контроль за исполнением инструкций и доступов к ресурсам, обработка внешних и внутренних исключений
+    \item Аппаратная виртуализация: тема отдельной лекции
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Плюсы и минусы}
+\begin{itemize}
+    \item Прямое исполнение большинства инструкций $\Rightarrow$ самый быстрый способ симуляции
+    \item Упрощение модели, уменьшение объёма кода симулятора
+\end{itemize}
+
+\begin{itemize}
+    \item Необходима аппаратная поддержка
+    \item Надо писать код для ядра ОС
+    \item Медленное переключение между режимами %может снизить производительность
+    \item Работает только при совпадении архитектур
+    \item Не все режимы процессора могут быть симулированы
+\end{itemize}
+
+Предпочтительный подход: модуль ядра для частых операций и пользовательское приложение для всего остального
+
+\end{frame}
+
+
+\section{Коробка передач}
+\begin{frame}{Спектр симуляционных подходов}
+\centering
+\begin{tikzpicture}[>=latex,
+                    node distance=0.25cm, font=\small,
+                    align=left,
+                    start chain=going {at=(\tikzchainprevious),shift=(30:1.5)}]
+
+\node[on chain] (n1) {Интерпретатор}; % переключаемый
+% \node[on chain] {Интерпретатор сцепленный};
+% \node[on chain] {Интерпретатор кэширующий};
+\node[on chain] {Двоичная трансляция};
+\node[on chain] {Прямое исполнение};
+\node[on chain] (n5) {Реальная аппаратура};
+
+\coordinate[right=0.75cm of n1] (a1);
+\coordinate[right=0.75cm of n5] (a5);
+\coordinate[left=0.75cm of n1] (b1);
+\coordinate[left=0.75cm of n5] (b5);
+
+\pause\draw[->] (a1) -- (a5) node[inner xsep=3pt, pos=0.7, right=0.25cm] {\scriptsize Скорость};
+\pause\draw[->] (b5) -- (b1) node[inner xsep=3pt, pos=0.7, left=0.25cm] {\scriptsize Универсальность};
+
+
+\end{tikzpicture}
+
+%  Интерпретатор
+%
+%  Прямое
+% ()
+%  ()
+%  ()
+%
+%  исполнение
+
+\end{frame}
+
+
+\begin{frame}{Коробка передач}
+\centering
+
+\inputpicture{gearbox}
+
+\end{frame}
+
+\begin{frame}{Динамическое переключение режимов}
+\begin{itemize}
+    \item Оптимальное использование лучших сторон каждого из подходов
+    \item Необходимость разработки фактически нескольких симуляторов
+\end{itemize}
+\end{frame}
+
+\section{Заключение}
+\begin{frame}{Итоги}
+\begin{itemize}
+\item Наивное прямое исполнение
+\item Заплатки и заглушки
+\item Аппаратная поддержка прямого исполнения
+\item Переключение режимов симуляции и условия на переходы между ними
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[allowframebreaks]{Литература}
+\begin{thebibliography}{99}
+    \bibitem{plex86} Kevin P. Lawton. Plex86: An 180x86 Virtual Machine - 2000 \url{https://www.usenix.org/legacy/publications/library/proceedings/als00/2000papers/papers/full_papers/lawton/lawton.pdf}
+    \bibitem{pinpapers} Pin - A Binary Instrumentation Tool - Papers \url{https://software.intel.com/en-us/articles/pin-a-binary-instrumentation-tool-papers}
+    \bibitem{pin} Heidi Pan, Krste Asanovíc, Robert Cohn and Chi-Keung Luk. Controlling Program Execution through Binary Instrumentation \url{http://www.cs.berkeley.edu/~krste/papers/pin-wbia.pdf}
+    \bibitem{vms} F. Leung, G. Neiger, D. Rodgers, A. Santoni, R. Uhlig. Intel Virtualization Technology: Hardware Support for Efficient Processor Virtualization // Intel Technology Journal 10 (03) Aug 2006
+
+    {\scriptsize\url{http://atakua.doesntexist.org/public/archive/papers/Intel-VT-Hardware-Support-for-Efficient-Processor-Virtualization.pdf}}
+
+    \bibitem{habr2} Программная симуляция микропроцессора. Коробка передач \url{http://habrahabr.ru/company/intel/blog/202926/}
+\end{thebibliography}
+\end{frame}
+
+
+\begin{frame}{На следующей лекции}
+\centering
+
+Симуляция периферийных устройств и полной платформы
+
+\end{frame}
+
+% The final "thank you" frame
+\begin{frame}
+
+{\huge{Спасибо за внимание!}\par}
+
+\vfill
+
+Слайды и материалы курса доступны по адресу \url{http://is.gd/ivuboc} % http://atakua.doesntexist.org/wordpress/simulation-course-russian/
+
+\vfill
+
+\tiny{\textit{Замечание}: все торговые марки и логотипы, использованные в данном материале, являются собственностью их владельцев. Представленная здесь точка зрения отражает личное мнение автора, не выступающего от лица какой-либо организации.}
+
+\end{frame}
+
+\end{document}
