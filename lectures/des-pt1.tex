@@ -1,5 +1,6 @@
 \input{../common/config}
 \title{Симуляция, управляемая событиями}
+%\title{Исполняющие и неисполняющие модели. Симуляция многопроцессорных систем}
 
 \begin{document}
 
@@ -284,7 +285,6 @@ while (! empty(queue)) {
 % 
 % \end{frame}
 
-
 \section{Практический пример}
 
 \begin{frame}[fragile]{Пример на модели \texttt{or1k}}
@@ -305,6 +305,182 @@ simics> peq
 999801  cosim_cell  sync_block
 \end{verbatim}
 
+\end{frame}
+
+\section{Два класса моделей}
+
+\begin{frame}{На этой лекции}
+\begin{itemize}
+    \item Совместная работа с моделью процессора.
+    \item Работа с несколькими процессорами сразу.
+\end{itemize}
+\end{frame}
+
+\section{Косимуляция}
+
+\begin{frame}{Какие типы моделей нам известны}
+
+\begin{itemize}
+    \item Интерпретация\pause: процессоры. \pause
+    \item Очередь событий\pause: таймер.\pause
+    \item «Мгновенная» модель «стимул — отклик»\pause: ОЗУ.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Модель многопроцессорной системы}
+\begin{tikzpicture}[>=latex]
+
+\node[draw, circle] (core1) {Ядро 1};
+\node[draw, circle, right = of core1] (core2) {Ядро 2};
+\node[draw, circle, right = of core2] (core3) {Ядро 3};
+\node[draw, circle, right = of core3] (core4) {Ядро $N$};
+
+\coordinate[below = 2.3cm of core1] (c3);
+\coordinate[below = 1.5cm of core4] (c4);
+
+\node[draw, fit = (c3) (c4), inner ysep=1pt ] (shmem) {Общая память};
+
+\draw[<->] (core1.south) -- (shmem);
+\draw[<->] (core2.south) -- (shmem);
+\draw[<->] (core3.south) -- (shmem);
+\draw[<->] (core4.south) -- (shmem);
+
+\end{tikzpicture}
+
+\end{frame}
+
+\begin{frame}[fragile]{Квотированная симуляция}
+\begin{tikzpicture}[>=latex]
+\draw[->] (0,0) -- (8,0) node[pos=0.9, below] (sim-time) {Физическое время};
+
+\foreach \x in { 1, 2, 3, 4, 5, 6, 7} {
+    \draw (\x,-0.15) -- (\x,0.15) node (tick\x) {};
+};
+\matrix[anchor=south west] at (-0.5,0.5){
+    \node[] {CPU3}; & & & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!5] (arr3) {}; \\
+    \node {CPU2}; & & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!10] (arr2) {}; & \\
+    \node {CPU1}; & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!15] (arr1) {}; & & \\
+};
+
+\draw[->] (arr1.east) -- (arr2.west);
+\draw[->] (arr2.east) -- (arr3.west);
+
+\end{tikzpicture}
+
+\end{frame}
+
+\begin{frame}[fragile]{Квотированная симуляция}
+
+    \begin{tikzpicture}[>=latex]
+        \draw[->] (0,0) -- (8,0) node[pos=0.9, below] (sim-time) {Симулируемое время};
+
+    \foreach \x in { 1, 2, 3, 4, 5, 6, 7} {
+        \draw (\x,-0.15) -- (\x,0.15) node (tick\x) {};
+    };
+    \matrix[anchor=south west] at (-0.5,0.5){
+        \node {CPU3}; & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!5] (arr3) {};  \\
+        \node {CPU2}; & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!10] (arr2) {}; \\
+        \node {CPU1}; & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!15] (arr1) {}; \\
+    };
+
+    % \draw[->] (arr1.east) -- (arr2.west);
+    % \draw[->] (arr2.east) -- (arr3.west);
+
+    \end{tikzpicture}
+
+\end{frame}
+
+\begin{frame}{Размер квоты}
+\begin{itemize}
+\item  Процессор может исполнить меньше инструкций, чем содержится в выданной ему квоте.
+\item Не следует увлекаться излишне большими квотами, пытаясь ускорить исполнение.
+\item В DES-модели могут быть реализованы псевдо-события, обработка которых вызывает переключение текущего процессора.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Совместная симуляция DES и исполняющей модели}
+\centering
+    \begin{tikzpicture}[>=latex, font=\scriptsize]
+
+    \draw[->] (-0.5,0) -- (10.5,0); % node[pos=0.9, above] (sim-time) {Время};
+
+    \begin{scope}
+    \clip (0,-2) rectangle (10, 2.5);
+    \foreach \x in { 1, 2, 3, 4, 5, 6, 7, 8, 9} {
+        \draw (\x,-0.15) -- (\x,0.15) node (tick\x) {};
+    };
+
+    \node[shape=dart, draw, shape border rotate=270 ] at (1, 0.5) (event1) {};
+    \node[shape=dart, draw, shape border rotate=270 ] at (5, 0.5) (event2) {};
+    \node[shape=dart, draw, shape border rotate=270 ] at (9, 0.5) (event3) {};
+
+    \node[above of=event2] (desalabel) {Дискретные события};
+    \draw[->] (desalabel) -- (event1);
+    \draw[->] (desalabel) -- (event2);
+    \draw[->] (desalabel) -- (event3);
+
+    \draw (3,-0.5) ellipse[x radius = 2cm, y radius = 0.5cm] node {Исполнение процессора} ;
+    \draw (7,-0.5) ellipse[x radius = 2cm, y radius = 0.5cm] node {Исполнение процессора} ;
+
+    \draw (-1,-0.5) ellipse[x radius = 2cm, y radius = 0.5cm] node {} ;
+    \draw (11,-0.5) ellipse[x radius = 2cm, y radius = 0.5cm] node {} ;
+    \end{scope}
+    \end{tikzpicture}
+
+\end{frame}
+
+\begin{frame}{Косимуляция}
+
+\centering
+    \begin{tikzpicture}[>=latex]
+    \node[draw, circle, text width = 3cm, text badly centered] (dessim) {Симулятор дискретных событий};
+    \node[draw, circle, text width = 3cm, text badly centered, right = 2.5cm of dessim] (execsim) {Модель исполняющего устройства};
+
+    \draw (dessim.45)   edge[bend left = 45, ->] (execsim.135);
+    \node[above=1cm of execsim.135] {\small Длительность до следующего события};
+    \draw (execsim.225) edge[->, bend left = 45] (dessim.315);
+    \node[below=1cm of dessim.315] {\small Число исполненных шагов};
+
+    \end{tikzpicture}
+
+\end{frame}
+
+\section{Практический пример}
+
+\begin{frame}[fragile]{Пример на модели \texttt{viper-busybox.simics}}
+Квота на восьмиядерной конфигурации:
+\begin{verbatim}
+simics> cpu-switch-time
+Current time quantum:     0.0001 s
+  200000.0  viper.mb.cpu0.core[0][0]
+  200000.0  viper.mb.cpu0.core[0][1]
+  200000.0  viper.mb.cpu0.core[1][0]
+  200000.0  viper.mb.cpu0.core[1][1]
+  200000.0  viper.mb.cpu0.core[2][0]
+  200000.0  viper.mb.cpu0.core[2][1]
+  200000.0  viper.mb.cpu0.core[3][0]
+  200000.0  viper.mb.cpu0.core[3][1]
+Default time quantum not set yet
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{Пример на модели \texttt{viper-busybox.simics}}
+Симулируемое время на восьмиядерной конфигурации:
+\begin{verbatim}
+simics> ptime -all
+processor                      steps      cycles  time [s]
+viper.mb.cpu0.core[0][0]  4602030000  5134030000     2.567
+viper.mb.cpu0.core[0][1]  4925600000  5134000000     2.567
+viper.mb.cpu0.core[1][0]  4925600000  5134000000     2.567
+viper.mb.cpu0.core[1][1]  4925600000  5134000000     2.567
+viper.mb.cpu0.core[2][0]  4925600000  5134000000     2.567
+viper.mb.cpu0.core[2][1]  4925600000  5134000000     2.567
+viper.mb.cpu0.core[3][0]  4925600000  5134000000     2.567
+viper.mb.cpu0.core[3][1]  4925600000  5134000000     2.567
+\end{verbatim}
     
 \end{frame}
 
@@ -332,9 +508,9 @@ simics> peq
 \begin{thebibliography}{99}
     \bibitem{patterson} Паттерсон Д., Хеннесси Дж. Архитектура компьютеров и проектирование компьютерных систем — СПб.: Питер — 2011 — 784~с. — ISBN 978-5-459-00291-1
     \bibitem{sim-handbook} Handbook of Simulation. Principles, Methodology, Advances, Applications, and Practice / ed. by J. Banks. — John Wiley \& Sons, Inc., 1998. — ISBN 0-471-13403-1. — \url{http://books.google.com/books?id=dMZ1Zj3TBgAC} % http://lib.mipt.ru/book/288185/
+    \bibitem{simics-processor-integration} Wind River. Simics Processor Integration Guide.
 \end{thebibliography}
 \end{frame}
-
 
 \section{Конец}
 % The final "thank you" frame
