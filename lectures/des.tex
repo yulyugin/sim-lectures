@@ -12,6 +12,46 @@
     \tableofcontents
 \end{frame}
 
+\begin{frame}{Платформа}
+\centering
+
+\begin{tikzpicture}[>=latex, font=\small, node distance = 0.5cm]
+
+\begin{scope}[minimum height=0.8cm]
+    \node[draw, ] (cpu) {CPU1};
+    \node[draw, below=of cpu] (mmu) {MMU1};
+
+    \node[draw, left=of cpu] (cpu2) {CPU2};
+    \node[draw, below=of cpu2] (mmu2) {MMU2};
+    \node[draw, right=2cm of cpu, ] (pic) {APIC};
+
+    \coordinate[above=of pic] (op);
+    \coordinate (mp) at (barycentric cs:mmu=0.5,mmu2=0.5);
+    \node[draw, below=1cm of mp] (addr-decoder) {addr-decoder};
+
+    \node[draw, below=2cm of mmu, text width=4.5cm, align = center, ] (dram) {RAM};
+    \node[draw, right=of pic, ] (pit) {PIT};
+
+\end{scope}
+
+\draw[<->] (cpu) -- (cpu |- mmu.north);
+\draw[<->] (cpu2) -- (cpu2 |- mmu2.north);
+
+\draw[<->] (mmu) -- (mmu |- addr-decoder.north);
+\draw[<->] (mmu2) -- (mmu2 |- addr-decoder.north);
+
+\draw[<->] (addr-decoder) -| (pit);
+\draw[<->] (addr-decoder) -- (addr-decoder |- dram.north);
+
+
+\draw[->, ] (pic) -- (cpu);
+\draw[->, ] (pit) -- (pic);
+\draw[->, ] (pic) -- (op) -| (cpu2);
+
+\end{tikzpicture}
+
+\end{frame}
+
 \section{Таймер}
 
 \begin{frame}{Пример №1: таймер}
@@ -77,7 +117,7 @@
 \draw[thick] (tick1) -- (tick10) -- ++(0, 0.5) -- ++(0.5, 0) --
             (tick11) -- (tick17) -- ++(0, 0.5) -- ++(0.5, 0) -- (tick18) -- (tick19);
 
-\end{tikzpicture}    
+\end{tikzpicture}
 \end{frame}
 
 \begin{frame}[fragile]{Моделирование с фиксированным шагом}
@@ -97,7 +137,7 @@ on_reset() {
     reference = 0;
     counter = 0;
 }
-\end{verbatim}    
+\end{verbatim}
 \end{frame}
 
 \begin{frame}{Типичные значения параметров таймера}
@@ -109,7 +149,7 @@ on_reset() {
 \end{itemize}
 
 $\Rightarrow$ внешне видимый эффект (\#INT) происходит примерно один раз в $10^3$ тактов.
-    
+
 \end{frame}
 
 \begin{frame}{Оптимизация}
@@ -275,15 +315,15 @@ while (! empty(queue)) {
 
 \end{frame}
 
-% \begin{frame}{Свойства событий}
-% 
-% \begin{itemize}
-% \item Порождаемые события не могут попасть в прошлое.
-% \item Обработка событий может не только порождать события в будущем, но и отменять некоторые из них (ещё не обработанные).
-% \item Несколько событий могут иметь одинаковую метку времени.
-% \end{itemize}
-% 
-% \end{frame}
+\begin{frame}{Свойства событий}
+
+\begin{itemize}
+\item Порождаемые события не могут попасть в прошлое.
+\item Обработка событий может не только порождать события в будущем, но и отменять некоторые из них (ещё не обработанные).
+\item Несколько событий могут иметь одинаковую метку времени.
+\end{itemize}
+
+\end{frame}
 
 \section{Практический пример}
 
@@ -307,15 +347,7 @@ simics> peq
 
 \end{frame}
 
-\section{Два класса моделей}
-
-\begin{frame}{На этой лекции}
-\begin{itemize}
-    \item Совместная работа с моделью процессора.
-    \item Работа с несколькими процессорами сразу.
-\end{itemize}
-\end{frame}
-
+%\section{Два класса моделей}
 \section{Косимуляция}
 
 \begin{frame}{Какие типы моделей нам известны}
@@ -345,6 +377,34 @@ simics> peq
 \draw[<->] (core2.south) -- (shmem);
 \draw[<->] (core3.south) -- (shmem);
 \draw[<->] (core4.south) -- (shmem);
+
+\end{tikzpicture}
+
+\end{frame}
+
+\begin{frame}{Step-by-step}
+\begin{itemize}
+\item Как выдержать одновременность симуляции инструкций на всех гостевых процессорах? Исполнять не более одной инструкции за раз\pause
+\item Но это будет очень медленно! Может быть, возможно исполнять несколько гостевых инструкций без переключения?\pause
+\item А каково приблизительное время доставки сигналов от одного процессора до другого в реальности?
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Квотированная симуляция}
+\begin{tikzpicture}[>=latex]
+\draw[->] (0,0) -- (8,0) node[pos=0.9, below] (sim-time) {Физическое время};
+
+\foreach \x in { 1, 2, 3, 4, 5, 6, 7} {
+    \draw (\x,-0.15) -- (\x,0.15) node (tick\x) {};
+};
+\matrix[anchor=south west] at (-0.5,0.5){
+    \node[] {CPU3}; & & & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!5] (arr3) {}; \\
+    \node {CPU2}; & & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!10] (arr2) {}; & \\
+    \node {CPU1}; & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!15] (arr1) {}; & & \\
+};
+
+\draw[->] (arr1.east) -- (arr2.west);
+\draw[->] (arr2.east) -- (arr3.west);
 
 \end{tikzpicture}
 
@@ -481,7 +541,7 @@ viper.mb.cpu0.core[2][1]  4925600000  5134000000     2.567
 viper.mb.cpu0.core[3][0]  4925600000  5134000000     2.567
 viper.mb.cpu0.core[3][1]  4925600000  5134000000     2.567
 \end{verbatim}
-    
+
 \end{frame}
 
 \section{Заключение}
