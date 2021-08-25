@@ -10,7 +10,10 @@ ifneq ($(VERBOSE),yes)
 MAKEFLAGS += -s
 endif  # VERBOSE
 
-OPTIONS= -halt-on-error
+LOG_DIR:=log
+PDF_DIR:=pdf
+
+OPTIONS= -halt-on-error -aux-directory=$(LOG_DIR) -output-directory=$(PDF_DIR)
 ifeq ($(UNAME), Linux)
 LATEXCOMMAND=xelatex
 RM = rm
@@ -29,7 +32,7 @@ LECTURES=$(patsubst $(SRC_DIR)/%.tex,%,$(wildcard $(SRC_DIR)/*.tex))
 all: $(LECTURES)
 
 $(LECTURES):
-	cd $(SRC_DIR) && bash -c "while ( $(LATEXCOMMAND) $(OPTIONS) $@ ; grep -q 'Rerun to get' $@.log ) do true ; done"
+	cd $(SRC_DIR) && bash -c "while ( $(LATEXCOMMAND) $(OPTIONS) $@ ; grep -q 'Rerun to get' $(LOG_DIR)/$@.log ) do true ; done"
 
 clean:
-	cd $(SRC_DIR) && rm -f *.log *.aux *.nav *.out *.pdf *.snm *.toc *.vrb
+	cd $(SRC_DIR) && rm -rf $(LOG_DIR) $(PDF_DIR)
