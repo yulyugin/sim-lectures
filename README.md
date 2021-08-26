@@ -1,6 +1,22 @@
 sim-lectures
 ============
 
+Presentation for "Fundamentals of Full-Platform Simulation" MIPT course.
+
+## List of lectures
+
+1. Simulation Role in Software and Hardware Development.
+1. Terminology and General Requirements for Simulation.
+1. Simulation Through Interpretation.
+1. Simulation of Architectural State.
+1. Simulation through Just in Time Compilation.
+1. Simulation Through Direct Execution.
+1. DES.
+1. Parallel DES.
+1. Cycle Accurate Simulation.
+1. Paravirtualization - Connecting Real Word With Simulation.
+1. Programming Languages for Model and Hardware Development.
+
 Презентации курса "Основы программного моделирования"
 
 ## Список лекций
