@@ -4,98 +4,113 @@
 
 \begin{document}
 
-\begin{frame}
-    \maketitle
-\end{frame}
+\startslides
 
-\begin{frame}
-    \tableofcontents
-\end{frame}
+\section{Complexity of Modern Computer Systems}
 
-\section{Сложность вычислительных систем}
-
-\begin{frame}{Сложность вычислительных систем}
+\begin{frame}{Complexity of Modern Computer Systems}
 
 \centering
-\includegraphics[width=0.7\textwidth]{ic-floor}
+\includegraphics[width=0.65\textwidth]{ic-floor}
 
-\tiny{Иллюстрация из: P. Horowitz and W. Hill. 1989. The Art of Electronics. Cambridge University Press, New York, NY, USA}
+\tiny{Source: P. Horowitz and W. Hill. 1989. The Art of Electronics. Cambridge
+University Press, New York, NY, USA}
 
 \end{frame}
 
-\begin{frame}{Почему разработка только на реальном железе невыгодна }
+\begin{frame}{Why Software Development Only On Real Hardware Is Not Beneficial?}
 
 \begin{itemize}
-\item Количество доступных образцов мало
-\item Отладка очень сложна
-\item Цикл разработки длинный
+\item Amount of available samples is usualy limited,
+\item low-level debug is challenging,
+\item long development cycle.
 \end{itemize}
 
-$\Rightarrow$ Стоимость разработки увеличивается
+$\Rightarrow$ development cost is increasing.
 
 \bigskip
 
-\tiny{I've noticed a shift during the past couple of years towards an increasing use of various types of simulation, including virtual platforms. Previously software developers wanted real hardware, but now they have to start using simulation because there's no chip available. \textit{Tomas Evensen, Wind River CTO}}
+\tiny{I've noticed a shift during the past couple of years towards an increasing
+use of various types of simulation, including virtual platforms. Previously
+software developers wanted real hardware, but now they have to start using
+simulation because there's no chip available.
+\textit{Tomas Evensen, Wind River CTO}}
 
 \end{frame}
 
-\begin{frame}{Программные модели}
+\begin{frame}{Solution - Software Models of Real Hardware}
 \centering 
 \inputpicture{idea}
 
 \end{frame}
 
-\section{Области использования моделей}
+\section{Areas of Application}
 
-\begin{frame}{Области использования}
+\begin{frame}{Areas of Application}
 
 \begin{itemize}
-\item Новое аппаратное обеспечение
-\item Совместная разработка аппаратуры и программ
-\item Экспериментальные архитектуры
-\item Предсказание производительности, потребления мощности
-\item Обеспечение совместимости с другими архитектурами
+\item New hardware development,
+\item software and hardware co-development,
+\item experimental architectures,
+\item power and performance prediction,
+\item compatibility with other architecures.
 \end{itemize}
 
 \end{frame}
 
-
-\begin{frame}{Новая аппаратура}
+\begin{frame}{New Hardware Development}
 
 \inputpicture{error-cost}
 
 \end{frame}
 
-\begin{frame}{Разработка программ и аппаратуры}
+\begin{frame}{Software and Hardware Development}
 
 \begin{itemize}
-\item Firmware, BIOS, UEFI
-\item Драйверы устройств
-\item Операционные системы
-\item Компиляторы
-\item Приложения
+\item Firmware, BIOS, UEFI.
+\item Operation systems.
+\item Device drivers.
+\item Compilers.
+\item Applications.
 \end{itemize}
 
 \end{frame}
 
-\begin{frame}{Совместная разработка}
+\begin{frame}{``Shift Left`` --- Accelerated Product Development}
 
-\includegraphics[width=0.8\textwidth]{shift-left} % TODO TikZ-elize this
+\centering
 
-\end{frame}
+\includegraphics[width=1\textwidth]{shift-left} % TODO TikZ-elize this
 
-\begin{frame}{Экспериментальные архитектуры}
+\begin{tiny}
+Impact of Shift left on hardware/software development.
+Source: Semiconductor Engineering
+\end{tiny}
+
+\vfill
 
 \begin{itemize}
-\item Новые ISA
-\item Многоядерные системы
-\item Векторные системы
-\item Безопасность и криптография
+\item Allow early software development --- before silicon arrives.
+\item Shorten time to marked by overlapping hardware and software designs.
+\item Decouple software and hardware development.
+\item Validation of software, hardware, and their integration starts earlier.
 \end{itemize}
 
 \end{frame}
 
-\begin{frame}{Предсказание производительности}
+\begin{frame}{Experimental Architectures}
+
+\begin{itemize}
+\item New Instruction Set Architectures (ISA).
+\item New ISA extensions.
+\item Multicore systems.
+\item Vector systems.
+\item Security and Cryptography.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Power and Performace Prediction}
 
 \begin{itemize}
 \item Untimed
@@ -105,71 +120,70 @@ $\Rightarrow$ Стоимость разработки увеличивается
 
 \end{frame}
 
-
-\begin{frame}{Обеспечение совместимости}
+\begin{frame}{Compatibility with Other Architectures}
 \includegraphics[width=0.8\textwidth]{compat} % TODO TikZ-elize this
-
 \end{frame}
 
-\section{Термины}
+\section{Terminology}
 
-\begin{frame}{Терминология}
+\begin{frame}{Terminology}
 \begin{itemize}
-\item Симуляция — моделирование системы через имитацию внешне видимых эффектов, возникающих при взаимодействии с ней
-\item Эмуляция — моделирование системы через имитацию внутренней структуры и процессов, происходящих внутри её подсистем
-\item Виртуализация — обеспечение эффективной изоляции нескольких систем друг от друга при одновременном и прозрачном доступе к ресурсам нижележащей системы
+\item \textbf{Simulation} --- replication of system's behavior that can be
+      observed through \textbf{\textit{external}} interaction with the system.
+\item \textbf{Emulation} --- replication of a system's behavior considering how
+      the system \textbf{\textit{internally}} works through imitation of all
+      internal structures and processes.
+\item \textbf{Virtualization} --- effective isolation of several systems from
+      each other with simultaneous and transparent access to resources of the
+      underlying system.
 \end{itemize}
 
 \end{frame}
 
-\begin{frame}{Типы симуляторов}
+\begin{frame}{Types of Simulators}
 \begin{itemize}
-\item Полноплатформенные
-\item Режима приложения
-\item Функциональные
-\item Потактовые
-\item Программные
-\item Гибридные
-%\item 
-%\item 
+\item Full-platform,
+\item Application level,
+\item Functional,
+\item Cycle-accurate,
+\item Software,
+\item Hybrid.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Терминология}
+\begin{frame} {Terminology}
 \begin{itemize}
-\item Хозяин, host, инструментальная система
-\item Гость, guest, target, целевая система
-%\item
-%\item
+\item Host,
+\item Guest, target.
 \end{itemize}
 \end{frame}
 
-\section{Возможности}
+\section{Capabilities}
 
-\begin{frame}{Некоторые возможности симуляции}
+\begin{frame}{Some Simulation Capabilities}
 \begin{itemize}
-\item Неразрушающее изучение
-\item Повторяемость запусков
-\item Сохранение состояния
-\item Синхронная остановка
-\item Обращение времени
+\item Non-intrusive inspection,
+\item Repeatability,
+\item Save/restore of simulated state,
+\item Synchronized system stop,
+\item Reverse execution.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Итоги}
+\begin{frame}{Conclusions}
 \begin{itemize}
-\item Программные модели создаются до доступности аппаратуры
-\item Они используются повсеместно для совместной разработки программ и железа
-\item Симуляция позволяет делать вещи, о которых раньше можно было только мечтать
+\item Software models are created before hardware availability.
+\item Software models are used for software-hardware co-development.
+\item Simulation provides unique debugging and development capabilities.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{На следующей лекции}
+\begin{frame}{On the next lecture:}
 \begin{itemize}
-\item Требования на симуляторы
+\item Terminology,
+\item general requirements for simulation.
 \end{itemize}
 \end{frame}
-
 
 %\section{Литература}
 %
@@ -182,22 +196,6 @@ $\Rightarrow$ Стоимость разработки увеличивается
 %\end{thebibliography}
 %\end{frame}
 
-
-% The final "thank you" frame
-\begin{frame}
-
-{\huge{Спасибо за внимание!}\par}
-
-\vfill
-
-Слайды и материалы курса доступны по адресу \url{http://is.gd/ivuboc} % http://atakua.doesntexist.org/wordpress/simulation-course-russian/
-
-\vfill
-
-\tiny{\textit{Замечание}: все торговые марки и логотипы, использованные в данном материале, являются собственностью их владельцев. Представленная точка зрения отражает личное мнение автора.
-%Материалы доступны по лицензии Creative Commons Attribution-ShareAlike (Атрибуция — С сохранением условий) 4.0 весь мир (в т.ч. Россия и др.). Чтобы ознакомиться с экземпляром этой лицензии, посетите \url{http://creativecommons.org/licenses/by-sa/4.0/}
-}
-
-\end{frame}
+\finalslide
 
 \end{document}
