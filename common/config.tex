@@ -41,13 +41,37 @@
 \date{\today}
 
 \author[Evgenii Iuliugin]{
-  Evgenii Iuliugin \small{\href{mailto:yulyugin@gmail.com}{yulyugin@gmail.com}}}
+  Evgenii Iuliugin, \small{\href{mailto:yulyugin@gmail.com}{yulyugin@gmail.com}}}
 \typeout{Copyright 2021 Evgenii Iuliugin}
 
-\usetheme{Berlin}
+\usetheme{Madrid}
 \setbeamertemplate{navigation symbols}{}
 
+\makeatletter
+\setbeamertemplate{footline}{%
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=.15\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+      \usebeamerfont{author in head/foot}\insertshortauthor\expandafter\ifblank\expandafter{\beamer@shortinstitute}{}{~~(\insertshortinstitute)}
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.77\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+      \usebeamerfont{title in head/foot}\insertshorttitle
+    \end{beamercolorbox}%
+  }%
+  \begin{beamercolorbox}[wd=.08\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+    \usebeamerfont{date in head/foot}%
+    \usebeamertemplate{page number in head/foot}%
+    \hspace*{2ex}
+  \end{beamercolorbox}
+  \vskip0pt%
+}
+\makeatother
+
 \newcommand{\finalslide}{
+    \setbeamertemplate{footline}{}
+
+    \begin{frame}
+
     {\huge{Thank you!}\par}
 
     \vfill
@@ -56,12 +80,13 @@
     \vfill
 
     \tiny{\textit{Note}: All trademarks are the property of their respective
-        owners.
-        The presented point of view reflects the personal opinion of the author.
+        owners. The presented point of view reflects the personal opinion of
+        the author.
 
         %All the materials are licensed under the Creative Commons
-        %Attribution-NonCommercial-ShareAlike 4.0 Worldwide. To view a copy of
-        %this license, visit
+        %Attribution-NonCommercial-ShareAlike 4.0 Worldwide. To view a copy
+        %of this license, visit
         %\url{http://creativecommons.org/licenses/by-nc-sa/4.0/}.
     }
+    \end{frame}
 }
