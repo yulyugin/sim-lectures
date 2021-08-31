@@ -47,6 +47,11 @@
 \usetheme{Madrid}
 \setbeamertemplate{navigation symbols}{}
 
+\definecolor{miptdark}{RGB}{25,52,104}
+\definecolor{miptlight}{RGB}{1,114,192}
+\setbeamercolor{author in head/foot}{fg=white, bg=miptlight}
+\setbeamercolor{title in head/foot}{fg=white, bg=miptdark}
+
 \makeatletter
 \setbeamertemplate{footline}{%
   \leavevmode%
@@ -55,7 +60,7 @@
       \usebeamerfont{author in head/foot}\insertshortauthor\expandafter\ifblank\expandafter{\beamer@shortinstitute}{}{~~(\insertshortinstitute)}
     \end{beamercolorbox}%
     \begin{beamercolorbox}[wd=.77\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
-      \usebeamerfont{title in head/foot}\insertshorttitle
+      \usebeamerfont{title in head/foot}\inserttitle
     \end{beamercolorbox}%
   }%
   \begin{beamercolorbox}[wd=.08\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
@@ -63,7 +68,7 @@
     \usebeamertemplate{page number in head/foot}%
     \hspace*{2ex}
   \end{beamercolorbox}
-  \vskip0pt%
+  \vskip-1pt%
 }
 \makeatother
 
