@@ -6,165 +6,176 @@
 
 \startslides
 
-\section{Требования}
-
-\begin{frame}{На прошлой лекции}
-Симуляторы
+\begin{frame}{On the previous lecture:}
+Simulators:
 \begin{itemize}
-\item сократили длительность цикла проектирования вычислительных систем
-\item увеличили эффективность труда проектировщика
-\item стали незаменимы при совместной разработке аппаратуры и программного обеспечения
+\item Reduced time to market for new computer systems,
+\item Increased developer's efficiency,
+\item Helped to establish software and hardware co-development.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Вопросы}
+\begin{frame}{Questions}
 \begin{itemize}
-\item Что такое функциональный симулятор режима приложения?\pause 
-\item Почему программы и аппаратуру необходимо разрабатывать совместно?\pause
-\item Может ли Dosbox загрузить Windows? \pause Да, если это Win 3.1
+\item What is an application level functional simulator?\pause
+\item What is the difference between simulation, emulation and virtualization?\pause
+\item Why software and hardware need to be developed together?
 \end{itemize}
 \end{frame}
 
+\section{Requirements}
 
-\begin{frame}{Требования к симуляторным решениям}
+\begin{frame}{Requirements to Simulation Solutions}
 \begin{itemize}
-\item Точность
-\item Скорость
-\item Совместимость
+\item Accuracy,
+\item Speed,
+\item Compatibility.
 \end{itemize}
 \end{frame}
 
-\section{Точность}
+\section{Accuracy}
 
-\begin{frame}{Точность}
-
+\begin{frame}{Accuracy}
 \begin{flushright}
 \tiny{Essentially, all models are wrong, but some are useful. \textit{G. E. P. Box, N. R. Draper}}
 \end{flushright}
-
+\vfill
 \begin{itemize}
-\item Точность должна быть достаточной для выполнения целей, поставленных перед симулятором
-\item Излишняя точность — медленная работа, дольше разработка, больше ошибок
-\end{itemize}
-
-\end{frame}
-
-\begin{frame}{Откуда берутся данные для создания модели}
-
-\begin{itemize}
-\item По спецификациям, документации: SDM, EAS, BWG\dots
-\item Из предыдущей модели + спецификации
-\item Из анализа работы реальной аппаратуры (reverse engineering)
-\end{itemize}
-
-\end{frame}
-
-\begin{frame}{Как проверить корректность модели?}
-
-\begin{itemize}
-\item Функциональная корректность
-\item Адекватность результатов
-\item Сравнение с другой моделью этого же устройства
-\item Сравнение с реальной аппаратурой
+\item A model should be accurate enough to fulfill the assigned tasks.
+\item Extra accuracy --- lower simulation speed, longer development, more errors.
+\vfill
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Как \textit{доказать} корректность модели?}
-
+\begin{frame}{Where to Get Data for Model Creation?}
 \begin{itemize}
-\item Формальная верификация
-\item Не всегда возможна
-\item Огромное число состояний: длина одной инструкции IA-32 до 15 байт, а это $2^{120}$ комбинаций входных значений
+\item Specification and documentation. \textit{For example}: Intel SDM, EAS, BWG\dots
+\item Existing models + specification.
+\item Reverse engineering.
 \end{itemize}
 \end{frame}
 
-\section{Скорость}
-
-\begin{frame}{Скорость}
+\begin{frame}{How to check Model Correctness?}
 \begin{itemize}
-\item MIPS — миллионы гостевых инструкций, исполненных за одну хозяйскую секунду
-\item МГц — число гостевых тактов, исполненных за одну хозяйскую секунду
+\item Functional correctness,
+\item Reasonable results,
+\item Compare with other model of the same device,
+\item Compare with real hardware.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Скорость как замедление}
-Slowdown. Сравнение с физической системой со сходными параметрами и исполняющей аналогичный сценарий
+\begin{frame}{How to \textit{Prove} Model Correctness?}
 \begin{itemize}
-\item Необходима реальная система, с которой можно сравниваться
-\item Специальный случай: целевая архитектура = хозяйская % «»
-\item Чаще всего модель работает медленнее аппаратуры
+\item Formal verification,
+\item Not always possible,
+\item Huge number of possible states. \textit{For example}: x86 instruction
+  length is up to 15 bytes $\Rightarrow$ up to $2^{120}$  possible input values.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Замедление разных типов симуляции}
+\section{Speed}
+
+\begin{frame}{Speed}
+\begin{itemize}
+\item MIPS --- Million \textit{guest} Instruction Per \textit{host} Second.
+\item MHz --- number of \textit{guest} cycles per \textit{host} second.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Speed as Slowdown}
+Slowdown --- comparisson with a similar physical system that executes the same
+workload.
+
+\begin{equation*}
+\centering
+Slowdown = T_{guest}/T_{host}
+\end{equation*}
+
+\vfill
+
+\begin{itemize}
+\item Physical system is required for comparisson.
+\item Special case: guest system matches host.
+\item Usually guest systems slower than host, i.e. slowdown > 1.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Typical Slowdown for Different Simulator Types}
 \begin{tabular}{rl}
-\textbf{Тип модели}                    & \textbf{Замедление} \\
-Функциональная с аппаратным ускорением & $1$\dots$5$ \\
-Функциональная с двоичной трансляцией  & $10$\dots$100$ \\
-Функциональная с интерпретацией        & $100$\dots$10^3$ \\
-Потактовая                             & $10^3$\dots$10^6$ \\
+\textbf{Model Type}                      & \textbf{Slowdown} \\
+Functional through hardware acceleration & $1$\dots$5$ \\
+Functional through binary translation    & $10$\dots$100$ \\
+Functional through interpretation        & $100$\dots$10^3$ \\
+Cycle-accurate                           & $10^3$\dots$10^6$ \\
 \end{tabular}
-
 \end{frame}
 
-
-\begin{frame}{Как повысить скорость симулятора?}
+\begin{frame}{How to Improve Simulation Speed?}
 \begin{itemize}
-\item Это мы будем обсуждать на многих последующих занятиях
-\item Эффективная симуляция и бездействие, аппаратная поддержка, параллельное исполнение\dots
+\item It's a main topic for the next lectures:
+\begin{itemize}
+\item Effective simulation for busy waiting,
+\item Hardware acceleration,
+\item Parallel execution,
+\item Lazy flag evaluation,
+\item And many more\dots
+\end{itemize}
 \end{itemize}
 \end{frame}
 
-\section{Совместимость}
+\section{Compatibility}
 
-\begin{frame}{Совместимость}
+\begin{frame}{Compatibility}
 \begin{itemize}
-\item Отладчики, среды разработки, анализаторы трасс
-\item Форматы: образов дисков и памяти, трасс
-\item Автоматизация и расширяемость с помощью динамических языков: Perl, Python, Lua\dots
-\item Автоматическая работа без человеческого вмешательства: без GUI, для регулярного тестирования
+\item Debuggers, IDE, tracer and trace analyzers.
+\item File formats: disk images, memory images, traces.
+\item Automation and extensibility by dynamic programming languages: Perl,
+  Python, Lua\dots
+\item Automatic operation without human intervention: no GUI, regressions
+  testing, longer experiments.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Структура симулятора}
+\begin{frame}{Simulator structure}
 \begin{itemize}
-\item Симуляционное ядро
-\item Интерфейс командной строки
-\item Графический интерфейс
-\item Интерпретатор скриптов
-\item Публичный API
+\item Simulator Core,
+\item Command Line Interface,
+\item Graphical Interface,
+\item Script Interpreter,
+\item Public API.
 \end{itemize}
 \end{frame}
 
-\section{Итоги}
+\section{Conclusions}
 
-\begin{frame}{Итоги}
+\begin{frame}{Conclusions}
 \begin{itemize}
-\item Точность
-\item Скорость
-\item Расширяемость
+\item Accuracy,
+\item Speed,
+\item Extensibility.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{На следующей лекции}
-\begin{itemize}
-\item Интерпретация
-\end{itemize}
+\begin{frame}[allowframebreaks]{Bibliography}
+\begin{thebibliography}{99}
+  \bibitem{} [RUS] \textit{Речистов~Г.С, Юлюгин~Е.А и др.},
+    Программное моделирование вычислительных систем.
+    \url{https://github.com/grigory-rechistov/simbook/blob/master/metoda/main-web.pdf}
+  \bibitem{} \textit{James Smith, Ravi Nair}, Virtual machines -- Versatile
+    Platforms for Systems and Processes.
+\end{thebibliography}
 \end{frame}
 
-% \section{Литература}
-
-% \begin{frame}[allowframebreaks]{Литература}
-% \begin{thebibliography}{99}
-    % \bibitem{simbook} Программное моделирование вычислительных систем (лекции). \url{http://atakua.doesntexist.org/public/archive/simcourse/simulation-lectures-latest.pdf}
-
-    % \bibitem{practicum} Лабораторный практикум по программному моделированию.  \url{http://atakua.doesntexist.org/public/archive/simcourse/simulation-practicum-latest.pdf}
-
-% \end{thebibliography}
-% \end{frame}
+\begin{frame}{On the next lecture:}
+Interpreters:
+\begin{itemize}
+\item Simplified pipeline,
+\item Exceptions,
+\item Optimizations,
+\item Advantages and disadvantages.
+\end{itemize}
+\end{frame}
 
 \finalslide
-
-\end{frame}
 
 \end{document}
