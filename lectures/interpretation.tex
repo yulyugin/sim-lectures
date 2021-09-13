@@ -1,8 +1,5 @@
 \input{../common/config}
 
-\newif\ifilab
-\ilabtrue
-
 \title{Simulation Through Interpretation}
 
 \begin{document}
@@ -13,10 +10,8 @@
 
 \section*{Обзор}
 
-\ifilab\else
 \begin{frame}{На прошлой лекции}
 \end{frame}
-\fi
 
 \begin{frame}{На этой лекции}
 \tableofcontents
@@ -26,6 +21,13 @@
 % \begin{frame}[fragile]
 
 \section{Цикл работы процессора}
+
+\begin{frame}{Моделируемая система}
+\centering
+\vfill
+\inputpicture{cpu-mem}
+\vfill
+\end{frame}
 
 \begin{frame}{Цикл работы процессора}
 \centering
@@ -51,16 +53,24 @@ while (run) {
 \end{lstlisting}
 \end{frame}
 
-\ifilab\else
-\begin{frame}{Уточненный цикл работы}
-\centering
-\resizebox{9cm}{7cm}{
-\inputpicture{interp-cycle-expanded-exception}
-}
-\end{frame}
-\fi
-
 \section{Fetch}
+
+\begin{frame}[fragile]{Чтение инструкции из памяти}
+
+\texttt{data = mem[pc];}\pause
+
+Скорее,
+
+\texttt{data = read_mem(pc);}\pause
+
+И не забыть про преобразование адресов:
+
+\begin{verbatim}
+paddr = v2p(pc); // pc - vaddr
+data = mem[paddr];
+\end{verbatim}
+
+\end{frame}
 
 \begin{frame}{Чтение инструкции из памяти}
 
@@ -129,11 +139,6 @@ Intel: word — 16 бит, dword — 32 бит, qword — 64 бит.
 
 \section{Decode}
 
-\begin{frame}{Анатомия инструкции}
-\centering
-\inputpicture{instruction-anatomy}
-\end{frame}
-
 \begin{frame}{Декодирование}
 Задача декодирования --- перевод данных об инструкции из машинного представления
 во внутреннее (высокоуровневое) удобное для последующего анализа.
@@ -153,47 +158,179 @@ Intel: word — 16 бит, dword — 32 бит, qword — 64 бит.
 \}}
 \end{frame}
 
+\begin{frame}{Example 1: RISC-V}
+\centering
+\includegraphics[width=.9\textwidth]{risc-v-formats}
+
+\tiny{Source: The RISC-V Instruction Set Manual, Volume I: Unprivileged ISA,
+      Document Version 20191213, page 16}
+\end{frame}
+
+\begin{frame}[fragile]{Example 1: RISC-V decoder (1/3)}
+\begin{lstlisting}
+#define BIT_FIELD(v, e, s) \
+    (v >> s) & ((1 << (e - s + 1)) - 1)
+
+static inline int32_t
+sign_extend(uint32_t v, int width) {/* ... */};
+
+typedef struct decode {
+    uint32_t opcode;
+    uint32_t rd;
+    uint32_t rs1;
+    uint32_t rs2;
+    int32_t  imm;
+    uint32_t funct3;
+    uint32_t funct7;
+    /* ... */
+} decode_t;
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Example 1: RISC-V decoder (2/3)}
+\begin{lstlisting}
+decode_t
+decode(uint32_t raw) {
+    uint32_t op = BIT_FIELD(raw, 6, 0);
+    switch (type(op)) {
+    case I_type:
+         return decode_i_type(raw);
+    case R_type:
+         return decode_r_type(raw);
+    /../
+    }
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Example 1: RISC-V decoder (3/3)}
+\begin{lstlisting}
+decode_t
+decode_i_type(uint32_t raw) {
+    uint32_t op = BIT_FIELD(raw, 6, 0);
+    uint32_t rd = BIT_FIELD(raw, 11, 7);
+    uint32_t funct3 = BIT_FIELD(raw, 14, 12);
+    uint32_t rs1 = BIT_FIELD(raw, 19, 15);
+    int32_t imm = sign_extend(
+        BIT_FIELD(raw, 31, 20), 12);
+
+    return (decode_t){.op = op, .rd = rd,
+                      .funct3 = funct3, .rs1 = rs1,
+                      .imm = imm};
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Example 2: Intel\reg~IA-64}
+\centering
+\includegraphics[width=.9\textwidth]{itanium-formats}
+
+\tiny{Source: Intel\reg~Itanium\reg~Architecture Software
+      Developer’s Manual, Revision 2.3, page 305}
+\end{frame}
+
+\begin{frame}{Example 3: Intel\reg~IA-32}
+\centering
+\includegraphics[width=.9\textwidth]{ia32-evex}
+
+\tiny{J.C.S. Adrian et al. Systems, Apparatuses, and Methods for Blending Two
+      Source Operands into a Single Destination Using a Writemask. US Patent
+      Application Publication. №~2012/0254588 A1}
+\end{frame}
+
+\begin{frame}{Что извлекать из машинного кода инструкции}
+\begin{centering}
+\inputpicture{instruction-anatomy}
+\end{centering}
+
+На выходе декодера:
+\begin{itemize}
+\item Успех, неуспех, недостаточно данных
+\item Для успеха: длина инструкции
+\item Для успеха: эмулирующая процедура
+\end{itemize}
+\end{frame}
+
 \begin{frame}{Декодирование}
-Код декодера редко пишется вручную, он генерируется по описанию:
+\begin{itemize}
+\item Код декодера редко пишется вручную, он генерируется по описанию:
+\item \texttt{\textcolor{red}{A5} \textcolor{blue}{Y}\textcolor{green}{X} 0\textcolor{orange}{Z} 00} $\Rightarrow$ \textcolor{red}{MOD} \textcolor{green}{RX}, \textcolor{blue}{RY}, \textcolor{orange}{RZ}
+\item В общем случае: классическаяя задача построения синтаксического анализатора.
+\item На практике: специализированные инструменты и языки
+\item Пример декодера --- XED (x86 encoder-decoder) \url{https://software.intel.com/sites/landingpage/pintool/docs/61206/Xed/html/}.
+\end{itemize}
+\end{frame}
 
-\texttt{\textcolor{red}{A5} \textcolor{blue}{Y}\textcolor{green}{X} 0\textcolor{orange}{Z} 00} $\Rightarrow$ \textcolor{red}{MOD} \textcolor{green}{RX}, \textcolor{blue}{RY}, \textcolor{orange}{RZ}
-
-\pause\bigskip
-
-В общем случае классическаяя задача построения  синтаксического анализатора.
-
-\pause\bigskip
-
-Пример декодера --- XED (x86 encoder-decoder) \url{https://software.intel.com/sites/landingpage/pintool/docs/61206/Xed/html/}.
+\begin{frame}{Декодирование: суровая реальность}
+\begin{itemize}
+\item Переменная длина инструкций. IA-32: от 8 до 120 бит. Сколько байт пытаться декодировать за один раз?
+\item Зависимость смысла от префикса, режима работы процессора. Пример: 0x40–0x4f в IA-32/Intel~64/AMD64
+\item Полное несоответствие какому-либо здравому смыслу
+\end{itemize}
 \end{frame}
 
 \begin{frame}{Дизассемблирование}
-Дизассемблирование --- перевод инструкций из машинного представление понятный
+\begin{itemize}
+\item Дизассемблирование --- перевод инструкций из машинного представление понятный
 человеку вид (мнемонику).
-
-\pause\bigskip
-
-Закодирование (encoding) --- перевод инструкций из мнемонической записи в
+\item Закодирование (encoding) --- перевод инструкций из мнемонической записи в
 машинный код.
+\end{itemize}
+\pause
+Вопрос: однозначны ли операции: декодирования, дизассемблирования, кодирования?
 \end{frame}
 
 \section{Execute}
 
 \begin{frame}{Исполнение}
-
-Базовая единица --- функция-эмулятор одной инструкции (service routine).
-
-\bigskip
-
-s.r. пишутся на языке высокого уровня --- переносимость кода между хозяйскими
+\begin{itemize}
+\item Базовая единица --- функция-эмулятор одной инструкции (service routine).
+\item s.r. пишутся на языке высокого уровня --- переносимость кода между хозяйскими
 платформами, компиляторами.
+\item Используются генераторы кода.
+\item Пример: SimGen --- из одного описания генерируются декодер, дизассемблер и s.r.
+\end{itemize}
+\end{frame}
 
-\bigskip
+\begin{frame}[fragile]{Simulated state}
+\begin{lstlisting}
+typedef struct {
+    uint32_t regs[16];
+    bool z_flag;
+    bool n_flag;
+    bool o_flag;
+    bool c_flag;
+    uint32_t pc;
+} cpu_t;
+\end{lstlisting}
+\end{frame}
 
-Используются генераторы кода.
+\begin{frame}[fragile]{Example: ADD reg reg reg}
+\begin{lstlisting}
 
-Пример: SimGen --- из одного описания генерируются декодер, дизассемблер и s.r.
+void add32_rrr(cpu_t *cpu, int src1, int src2, int dst) {
+    cpu->regs[dst] = cpu->regs[src1]
+                   + cpu->regs[src2];
+\end{lstlisting}
+\pause
 
+\begin{lstlisting}
+    cpu->z_flag = cpu->regs[dst] == 0;
+    cpu->n_flag = cpu->regs[dst] & (1 << 31);
+    cpu->o_flag = cpu->regs[dst] < 
+            MAX(cpu->regs[src1], cpu->regs[src2]);
+    cpu->c_flag = calc_c_flag(cpu->regs[src1],
+                              cpu->regs[src2]);
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Intel\reg~IA-32 CALL}
+\centering
+\includegraphics[width=\textwidth]{ia32-call}
+
+\tiny{Source: Intel\reg~64 and IA-32 Architectures Software Developer’s Manual,
+      Order Number: 325462-073US, pages 716-732.}
 \end{frame}
 
 \section{Write Back}
@@ -201,6 +338,8 @@ s.r. пишутся на языке высокого уровня --- перен
 \begin{frame}{Запись результата в память}
 
 <<Обычная>> запись в память:
+
+\texttt{write_mem(cpu, dst_addr, data, size);}\pause
 
 \pause
 
@@ -213,10 +352,27 @@ s.r. пишутся на языке высокого уровня --- перен
 
 \end{frame}
 
+\section{Exceptions}
+
+\begin{frame}{Уточненный цикл работы}
+\centering
+\resizebox{9cm}{7cm}{\inputpicture{interp-cycle-expanded-exception}}
+\end{frame}
+
+\begin{frame}{Классификация} % TODO a tree diagram?
+\begin{itemize}
+\item Interruptions (термин из документации IA-64) — вмешательство, перерыв, приостановка
+\item Exception — синхронное исключение, без повторения текущей инструкции
+\item Fault — синхронное, с повторением текущей инструкции
+\item Trap — синхронное, без повторения, намеренно вызванное
+\item Interrupt — внешнее асинхронное прерывание
+\item Abort — внешние асинхронное с отсутствием информации о точке возврата
+\end{itemize}
+\end{frame}
+
 \section{Advance \texttt{PC}}
 
 \begin{frame}{Продвижение \texttt{\$PC}}
-
 \begin{itemize}
     \item Для большинства команд увеличение счетчика на длину обработанной инструкции. \\
     Ислючение: \texttt{REP MOVS}.
@@ -225,78 +381,101 @@ s.r. пишутся на языке высокого уровня --- перен
     \begin{itemize}
         \item (Un)conditional (In)direct Jump/Branch,
         \item Call/Return (subroutine).
+        \item System call/return.
+        \item ...
     \end{itemize}
 \end{itemize}
-
 \end{frame}
 
-\ifilab
-\section{Практика}
+\section{Улучшенные схемы}
 
-\begin{frame}{Структура кода}
-
-Файл \texttt{modules/chip16/chip16.h}
-
-\texttt{struct chip16\_t;} --- состояние процессора.
-
-\pause\bigskip
-
-Файл \texttt{modules/chip16/chip16.c}
-
-Функции:
-
+\begin{frame}{Преимущества и недостатки интерпретации}
 \begin{itemize}
-    \item chip16\_string\_decode --- дизассемблер,
-    \item chip16\_execute --- декодирование и исполнение,
-    \item cr\_register\_attributes --- регистрация атрибутов.
+\item Пишется на языках высокого уровня: код переносим
+\item Простая структура: надёжность, расширяемость, переиспользование
+\end{itemize}
+\pause
+\begin{itemize}
+\item (Очень) низкая скорость работы
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Куда тратится время?}
+\begin{verbatim}
+start: interruption = false;
+while (!interruption) {
+    raw_code = fetch(PC);
+    (opcode, operands) = decode(raw_code); // <-- здесь
+    switch (opcode) { // <-- здесь
+    case opcode1:
+        func1(operands); PC++; break;
+    case opcode2:
+        func2(operands); PC++; break;
+    /*...*/
+    }
+}
+handle_interruption();
+goto start;
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{Шитая интерпретация (threaded interpretation)}
+Вместо возвращения к началу цикла «прыгаем» прямо на исполнение следующей инструкции
+\begin{verbatim}
+func0: /* simulate instr0 */; PC++;
+  next_opcode = decode(fetch(PC));
+  goto func_ptr[next_opcode];
+func1: /* simulate instr1 */; PC++;
+  next_opcode = decode(fetch(PC));
+  goto func_ptr[next_opcode];
+func2: /* simulate instr2 */; PC++;
+  next_opcode = decode(fetch(PC));
+  goto func_ptr[next_opcode];
+\end{verbatim}
+
+\tiny\url{http://stackoverflow.com/questions/11227809/why-is-processing-a-sorted-array-faster-than-an-unsorted-array}
+\end{frame}
+
+\begin{frame}{Кэширующая интерпретация}
+\begin{itemize}
+\item В большинстве случаев в код гостевого приложения неизменен
+\item Велика вероятность того, что инструкции с некоторыми PC будут исполнены много раз (\textit{задача})
+\item Зачем каждый раз их декодировать?
+\item Заводим таблицу соответствия «адрес инструкции $\rightarrow$ декодированный результат» 
 \end{itemize}
 
 \end{frame}
 
-\begin{frame}[fragile]{Тестирование}
+\begin{frame}[fragile]{Кэширующая интерпретация}
+\begin{verbatim}
+while (!interruption) {
+  if (operation = cache[PC]); // короткий путь
+  else { // не в кэше, длинный путь
+  	operation = decode(fetch(PC));
+  	cache[PC] = operation; // на будущее
+  }
+  switch (operation) {
+     /* ... */
+  }
+}
+\end{verbatim}
 
-\texttt{test/chip16/unit-tests/nop/s-nop.py}
+% \includegraphics[width=0.3\textwidth]{./cached}
 
-\begin{lstlisting}[language=python, basicstyle=\scriptsize]
-# This test checks NOP instruction
-import stest
-
-cli.run_command("run-python-file %s/targets/chip16/machine.py" % conf.sim.workspace)
-
-def test_nop_availability(cpu):
-    paddr = 0
-    cpu.pc = paddr
-    # NOP
-    simics.SIM_write_phys_memory(cpu, paddr, 0, 4)
-    SIM_continue(1)
-    stest.expect_equal(cpu.pc, paddr + 4)
-    print "NOP: success"
-
-test_nop_availability(conf.chip0)
-\end{lstlisting}
-
-Запуск: \texttt{> bin/test-runner test/chip16/unit-tests/nop}
 \end{frame}
 
-\begin{frame}{Инструкции для реализации}
-\begin{enumerate}
-    \item MULI RX, HHLL;
-    \item XOR RX, RY;
-    \item ADD RX, RY;
-    \item SUB RX, RY;
-    \item CMPI RX, HHLL;
-    \item AND RX, RY, RZ.
-\end{enumerate}
+\begin{frame}{Кэширующая интерпретация}
+\begin{itemize}
+\item Ёмкость любого кэша ограничена, старые данные надо выбрасывать
+\item Необходимо следить за неизменностью исходного кода, иначе сохранённое соответствие будет неверным
+\end{itemize}
 \end{frame}
-\fi
 
 \section*{Конец}
 % The final "thank you" frame 
 
-\ifilab\else
 \begin{frame}{На следующей лекции}
 \end{frame}
-\fi
 
 \begin{frame}
 
