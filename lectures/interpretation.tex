@@ -4,34 +4,39 @@
 
 \begin{document}
 
-\begin{frame}
-\titlepage
+\startslides
+
+\begin{frame}{On the Previous Lecture:}
+Requirements for simulation:
+\begin{itemize}
+\item Accuracy,
+\item Speed,
+\item Compatibility.
+\end{itemize}
 \end{frame}
 
-\section*{Обзор}
-
-\begin{frame}{На прошлой лекции}
+\begin{frame}{Questions}
+\begin{itemize}
+\item What units are used to measure simulation speed?\pause
+\item How much slower is a cycle-accurate simulator than a functional?
+\end{itemize}
 \end{frame}
 
-\begin{frame}{На этой лекции}
-\tableofcontents
-\end{frame} 
-
-\section{Цикл работы процессора}
-
-\begin{frame}{Моделируемая система}
+\begin{frame}{Simulated System}
 \centering
 \vfill
 \inputpicture{cpu-mem}
 \vfill
 \end{frame}
 
-\begin{frame}{Цикл работы процессора}
+\section{Pipeline}
+
+\begin{frame}{Basic 5-Stage Pipeline}
 \centering
-\inputpicture{interp-cycle-expanded}
+\inputpicture{interpreter-cycle}
 \end{frame}
 
-\begin{frame}[fragile]{Переключаемый интерпретатор (switched)}
+\begin{frame}[fragile]{Switched interpreter}
 \begin{lstlisting}
 while (run) {
     raw_code = fetch(PC);
@@ -52,58 +57,34 @@ while (run) {
 
 \section{Fetch}
 
-\begin{frame}[fragile]{Чтение инструкции из памяти}
-
+\begin{frame}[fragile]{Fetch}
 \texttt{data = mem[pc];}\pause
-
-Скорее,
-
-\texttt{data = read_mem(pc);}\pause
-
-И не забыть про преобразование адресов:
-
+\vfill
+Do not forget about address translation:
 \begin{lstlisting}
-paddr = v2p(pc); // pc - vaddr
+paddr = v2p(pc); // pc is a virtual address
 data = mem[paddr];
 \end{lstlisting}
-
 \end{frame}
 
-\begin{frame}{Чтение инструкции из памяти}
-
-<<Простое>> чтение байт из памяти?
-
-\pause
-
+\begin{frame}{Fetch}
+<<Simple>> memory read?
+\pause\bigskip
 \begin{itemize}
-    \item Невыровненный (unaligned) адрес в памяти. \\
-    Вызывает эффекты в некоторых архитектурах.
-    \pause\bigskip
-    \item Доступ на границе двух страниц памяти. \\
-    Разные страницы могут иметь разные характеристики.
+\item Non-execute page.
+\pause\bigskip
+\item Unaligned accesses cause effects on some architectures.
+\pause\bigskip
+\item Cross-page accesses. \\
+The pages may have different access rights.
 \end{itemize}
-
 \end{frame}
 
 \section{Decode}
 
-\begin{frame}{Декодирование}
-Задача декодирования --- перевод данных об инструкции из машинного представления
-во внутреннее (высокоуровневое) удобное для последующего анализа.
-
-\pause
-
-Вход: \texttt{\textcolor{red}{0x40} \textcolor{green}{0x05} \textcolor{blue}{0xab 0x12}}
-
-Результат:
-
-\texttt{instruction \{ \\
-~~~~opcode = \textcolor{red}{ADDI}, num\_operands = 2, \\
-~~~~\textcolor{green}{dst = \{type = OP\_REG, reg = R5\}}, \\
-~~~~\textcolor{blue}{src = \{type = OP\_IMM, val = 0x12ab\}}, \\
-~~~~disasm = "addi r5, 0x12ab", \\
-~~~~addr = 0x1234 \\
-\}}
+\begin{frame}{Decode}
+Decoding --- translation of instruction data from machine code to internal
+(high-level) representation suitable for further analysis.
 \end{frame}
 
 \begin{frame}{Example 1: RISC-V}
@@ -130,7 +111,6 @@ typedef struct decode {
     int32_t  imm;
     uint32_t funct3;
     uint32_t funct7;
-    /* ... */
 } decode_t;
 \end{lstlisting}
 \end{frame}
@@ -186,69 +166,70 @@ decode_i_type(uint32_t raw) {
       Application Publication. №~2012/0254588 A1}
 \end{frame}
 
-\begin{frame}{Что извлекать из машинного кода инструкции}
+\begin{frame}{What to Fetch From Machine Code?}
 \begin{centering}
 \inputpicture{instruction-anatomy}
 \end{centering}
+\vfill
+Input: machine code.
 
-На выходе декодера:
+Output:
 \begin{itemize}
-\item Успех, неуспех, недостаточно данных
-\item Для успеха: длина инструкции
-\item Для успеха: эмулирующая процедура
+\item Success, failure, not enough data.
+\item In case of success: instruction length.
+\item In case of success: information about operands.
+\item In case of success: simulation routine.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Декодирование}
+\begin{frame}{Decode}
 \begin{itemize}
-\item Код декодера редко пишется вручную, он генерируется по описанию:
-\item \texttt{\textcolor{red}{A5} \textcolor{blue}{Y}\textcolor{green}{X} 0\textcolor{orange}{Z} 00} $\Rightarrow$ \textcolor{red}{MOD} \textcolor{green}{RX}, \textcolor{blue}{RY}, \textcolor{orange}{RZ}
-\item В общем случае: классическаяя задача построения синтаксического анализатора.
-\item На практике: специализированные инструменты и языки
-\item Пример декодера --- XED (x86 encoder-decoder) \url{https://software.intel.com/sites/landingpage/pintool/docs/61206/Xed/html/}.
+\item Decoders are usually generated from ISA description.
+\item In general: classical problem of parser/synax analyser construction.
+\item In practice: special tools and languages.
+\item Example: Intel XED (x86 encoder-decoder). \url{https://github.com/intelxed/xed}
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Декодирование: суровая реальность}
+\begin{frame}{Decode: harsh reality}
 \begin{itemize}
-\item Переменная длина инструкций. IA-32: от 8 до 120 бит. Сколько байт пытаться декодировать за один раз?
-\item Зависимость смысла от префикса, режима работы процессора. Пример: 0x40–0x4f в IA-32/Intel~64/AMD64
-\item Полное несоответствие какому-либо здравому смыслу
+\item Variable instruction lenght. Intel\reg~IA-32: from 1 to 15 bytes. How many bytes to decode at once?
+\item Decoding results depends of prefixes and execution mode. Example: 0x40-0x4f in Intel\reg~IA-32/Intel\reg~64/AMD64.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Дизассемблирование}
+\begin{frame}{Disassemble}
 \begin{itemize}
-\item Дизассемблирование --- перевод инструкций из машинного представление понятный
-человеку вид (мнемонику).
-\item Закодирование (encoding) --- перевод инструкций из мнемонической записи в
-машинный код.
+\item Disassemble --- translate from machine code into human readable
+  representation (mnemonic, assembly).
+\item Encode (assemble) --- translate from mnemonic to machine code.
 \end{itemize}
-\pause
-Вопрос: однозначны ли операции: декодирования, дизассемблирования, кодирования?
 \end{frame}
 
 \section{Execute}
 
-\begin{frame}{Исполнение}
+\begin{frame}{Execute}
 \begin{itemize}
-\item Базовая единица --- функция-эмулятор одной инструкции (service routine).
-\item s.r. пишутся на языке высокого уровня --- переносимость кода между хозяйскими
-платформами, компиляторами.
-\item Используются генераторы кода.
-\item Пример: SimGen --- из одного описания генерируются декодер, дизассемблер и s.r.
+\item Basic block --- simulation function for one instruction (a.k.a.~service routine).
+\item Service routines are tipically written in high-level programming
+  languages: portable solution.
+\item Generators are often used.
+\item Example: SimGnen --- single discription is used to generate decoder,
+  disassembler and service routines.
 \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]{Simulated state}
 \begin{lstlisting}
 typedef struct {
+    uint32_t pc;
+
     uint32_t regs[16];
+
     bool z_flag;
     bool n_flag;
     bool o_flag;
     bool c_flag;
-    uint32_t pc;
 } cpu_t;
 \end{lstlisting}
 \end{frame}
@@ -281,80 +262,82 @@ void add32_rrr(cpu_t *cpu, int src1, int src2, int dst) {
       Order Number: 325462-073US, pages 716-732.}
 \end{frame}
 
-\section{Write Back}
+\section{Memory}
 
-\begin{frame}{Запись результата в память}
-
-<<Обычная>> запись в память:
-
-\texttt{write_mem(cpu, dst_addr, data, size);}\pause
-
-\pause
-
+\begin{frame}[fragile]{Memory}
+<<Ordinary>> memory access:
+\vfill
+\begin{lstlisting}
+write_mem(cpu, dst_addr, data, size);
+data = read_mem(cpu, dst_addr, size);
+\end{lstlisting}
+\pause\vfill
 \begin{itemize}
-    \item Невыровненный адрес,
-    \item Граница страниц,
-    \item Попытки изменить регион памяти доступный только для чтения,
-    \item Часть результата может быть записана, а потом случится исключение.
+\item Attempt to change read-only memory,
+\item Unaligned address,
+\item Cross-page access.
 \end{itemize}
-
 \end{frame}
 
 \section{Exceptions}
 
-\begin{frame}{Уточненный цикл работы}
+\begin{frame}{Accurate Pipeline}
 \centering
-\resizebox{9cm}{7cm}{\inputpicture{interp-cycle-expanded-exception}}
+\resizebox{9cm}{7cm}{\inputpicture{interpreter-cycle-exception}}
 \end{frame}
 
-\begin{frame}{Классификация} % TODO a tree diagram?
+\begin{frame}{Classification}
 \begin{itemize}
-\item Interruptions (термин из документации IA-64) — вмешательство, перерыв, приостановка
-\item Exception — синхронное исключение, без повторения текущей инструкции
-\item Fault — синхронное, с повторением текущей инструкции
-\item Trap — синхронное, без повторения, намеренно вызванное
-\item Interrupt — внешнее асинхронное прерывание
-\item Abort — внешние асинхронное с отсутствием информации о точке возврата
+\item Exception --- synchronous, without repeating of current instruction.
+\item Fault --- synchronous, with repeating of current instruction.
+\item Trap --- synchronous, without repeating of current instruction, intentoinal.
+\item Interrupt --- external, asynchronous.
+\item Abort --- external, asynchronous, no return point.
 \end{itemize}
 \end{frame}
 
-\section{Advance \texttt{PC}}
+\section{Write-Back}
 
-\begin{frame}{Продвижение \texttt{\$PC}}
+\begin{frame}{Write-Back}
 \begin{itemize}
-    \item Для большинства команд увеличение счетчика на длину обработанной инструкции. \\
-    Ислючение: \texttt{REP MOVS}.
+  \item Processor state should be updated after all excecption checks to avoid
+    partially changed state.
+  \bigskip
+  \item Advance \texttt{\$PC}:
+  \pause\bigskip
+  \begin{itemize}
+    \item For most instructions: \texttt{\$PC += instruction_length}. \\
+    Exception: \texttt{REP MOVS}.
     \pause\bigskip
-    \item Явное изменение \texttt{\$PC} --- команды управления исполнением:
+    \item Explicit \texttt{\$PC} update --- control-flow instructions:
     \begin{itemize}
-        \item (Un)conditional (In)direct Jump/Branch,
-        \item Call/Return (subroutine).
-        \item System call/return.
-        \item ...
+      \item (Un)conditional (In)direct Jump/Branch,
+      \item Call/Return (subroutine).
+      \item System call/return.
+      \item ...
     \end{itemize}
+  \end{itemize}
 \end{itemize}
 \end{frame}
 
-\section{Улучшенные схемы}
+\section{Improved Interpretation}
 
-\begin{frame}{Преимущества и недостатки интерпретации}
+\begin{frame}{Pros and Cons}
 \begin{itemize}
-\item Пишется на языках высокого уровня: код переносим
-\item Простая структура: надёжность, расширяемость, переиспользование
-\end{itemize}
+\item Implemented in high-level language --- portable.
+\item Simple structure: reliable, extensible, re-usasble.
 \pause
-\begin{itemize}
-\item (Очень) низкая скорость работы
+\item (Extremely) low simulation speed.
 \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{Куда тратится время?}
+\begin{frame}[fragile]{Where Is the Time Spent?}
 \begin{lstlisting}
 start: interruption = false;
 while (!interruption) {
     raw_code = fetch(PC);
-    (opcode, operands) = decode(raw_code); // <-- здесь
-    switch (opcode) { // <-- здесь
+    (opcode, operands) = decode(raw_code); // <-- here
+    switch (opcode) { // <-- and here
     case opcode1:
         func1(operands); PC++; break;
     case opcode2:
@@ -367,8 +350,9 @@ goto start;
 \end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile]{Шитая интерпретация (threaded interpretation)}
-Вместо возвращения к началу цикла «прыгаем» прямо на исполнение следующей инструкции
+\begin{frame}[fragile]{Threaded Interpretation}
+Jump right to the next instruction instead of start of the loop:
+\bigskip
 \begin{lstlisting}
 func0: /* simulate instr0 */; PC++;
   next_opcode = decode(fetch(PC));
@@ -384,55 +368,42 @@ func2: /* simulate instr2 */; PC++;
 \tiny\url{http://stackoverflow.com/questions/11227809/why-is-processing-a-sorted-array-faster-than-an-unsorted-array}
 \end{frame}
 
-\begin{frame}{Кэширующая интерпретация}
+\begin{frame}{Cached Interpretation}
 \begin{itemize}
-\item В большинстве случаев в код гостевого приложения неизменен
-\item Велика вероятность того, что инструкции с некоторыми PC будут исполнены много раз (\textit{задача})
-\item Зачем каждый раз их декодировать?
-\item Заводим таблицу соответствия «адрес инструкции $\rightarrow$ декодированный результат» 
+\item Usually guest code is static.
+\item It's highly probable that an instruction with some \texttt{\$PC} will be
+  executed many times.
+\item Why decode every time?
+\item Solution: create a cache mapping instruction address to decode data.
 \end{itemize}
-
 \end{frame}
 
-\begin{frame}[fragile]{Кэширующая интерпретация}
+\begin{frame}[fragile]{Cached Interpretation}
 \begin{lstlisting}
 while (!interruption) {
-  if (operation = cache[PC]); // короткий путь
-  else { // не в кэше, длинный путь
-  	operation = decode(fetch(PC));
-  	cache[PC] = operation; // на будущее
+  if (operation = cache[PC]); // shortcut
+  else { // not cached, full path
+    operation = decode(fetch(PC));
+    cache[PC] = operation; // cache the result
   }
   switch (operation) {
      /* ... */
   }
 }
 \end{lstlisting}
-
-% \includegraphics[width=0.3\textwidth]{./cached}
-
 \end{frame}
 
-\begin{frame}{Кэширующая интерпретация}
+% TODO: slide with diagram.
+
+\begin{frame}{Cached Interpretation}
 \begin{itemize}
-\item Ёмкость любого кэша ограничена, старые данные надо выбрасывать
-\item Необходимо следить за неизменностью исходного кода, иначе сохранённое соответствие будет неверным
+\item Cache size is limitted.
+\item Old data needs to be removed from the cache.
+\item Code modifications need to be tracked. Otherwise cache will have invalid
+  data.
 \end{itemize}
 \end{frame}
 
-\section*{Конец}
-% The final "thank you" frame 
-
-\begin{frame}{На следующей лекции}
-\end{frame}
-
-\begin{frame}
-
-{\huge{Спасибо за внимание!}\par}
-
-\vfill
-
-\tiny{\textit{Замечание}: все торговые марки и логотипы, использованные в данном материале, являются собственностью их владельцев. Представленная здесь точка зрения отражает личное мнение автора, не выступающего от лица какой-либо организации.}
-
-\end{frame}
+\finalslide
 
 \end{document}
