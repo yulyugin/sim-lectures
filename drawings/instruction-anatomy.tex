@@ -19,7 +19,7 @@
 
     \node[draw, fill=green, below = 1cm of mnemonic.south, minimum height = 0.5cm] (opcode) {Opcode};
     \node[draw, below = 1cm of src2.south, minimum height = 0.5cm] (regs) {Registers, memory addr., imm.};
-    \node[draw, fill=gray, align=center, below = 0.8cm of dst2.south, minimum height = 0.5cm] (flags) {Implicit operands:\\ флаги, PC};
+    \node[draw, fill=gray, align=center, below = 0.8cm of dst2.south, minimum height = 0.5cm] (flags) {Implicit operands:\\ flags, PC};
 
     \draw[FatArrow] (mnemonic) -- (opcode);
     \draw[FatArrow] (src1.south) -- ([yshift = -1cm] src1.south);
