@@ -3,123 +3,133 @@
 \usepackage{tikz}
 \usetikzlibrary{shapes, calc, arrows, decorations.markings, decorations.pathreplacing, decorations.pathmorphing, decorations, patterns, chains, snakes, backgrounds, positioning, fit, shadows}
 
-\title{Simulation through Just in Time Compilation}
+\title{Simulation Through Just in Time Compilation}
 
 \begin{document}
 
-\begin{frame}
-    \maketitle
-\end{frame}
+\startslides
 
-\begin{frame}
-    \tableofcontents
-\end{frame}
-
-\begin{frame}{На (поза)прошлой лекции}
+\begin{frame}{On the Previous Lecture:}
 \begin{itemize}
-\item Интерпретаторы — медленная штука
-\item Рассмотренные улучшения основаны на повторном использовании уже полученных результатов
-\item Существуют устоявшиеся идиомы для представления моделируемого архитектурного состояния
+\item 5-stage pipeline: \textbf{F}, \textbf{D}, \textbf{Ex}, \textbf{Mem},
+  \textbf{WB}.
+\item Interpreters are slow.
+\item Discussed couple of improved interpreter implementations.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Вопросы}
+\begin{frame}{Questions}
 \begin{itemize}
-% \item Определите термин «декодирование» \pause
-\item Сколько бит в машинном слове? \pause
-\item Что лучше — MMIO или PIO?\pause
-\item Может ли архитектура быть и не little, и не big-endian?
+\item What is a difference between decoding and disassembling?\pause
+\item What is a difference between interrupt and exception?\pause
+\item Can a threaded interpreter be cached as well?
 \end{itemize}
-
 \end{frame}
 
-% «»
-
-\begin{frame}{Что удалось соптимизировать в интерпретаторе}
-\begin{itemize}
-\item \textbf<1>{Fetch} \only<1>{$\leftarrow$ оптимизировано}
-\item \textbf<1>{Decode} \only<1>{$\leftarrow$ оптимизировано}
-\item \textbf<2>{Execute} \only<2>{$\rightarrow$ осталось соптимизировать}
-\item \textbf<2>{Writeback} \only<2>{$\rightarrow$ осталось соптимизировать}
-\item \textbf<2>{Advance PC} \only<2>{$\rightarrow$ осталось соптимизировать}
-\end{itemize}
-
+\begin{frame}{Simulated System}
+\centering
+\vfill
+\inputpicture{cpu-mem}
+\vfill
 \end{frame}
 
-\section{Интерпретация, компиляция, трансляция}
-
-\begin{frame}{Интерпретация и трансляция в языках высокого уровня}
+\begin{frame}{What Was Optimized in Interpreter}
 \begin{itemize}
-\item BASIC, CPython, Shell\dots
-    \begin{itemize}
-    \item Прочитать строку — распознать команды — исполнить
-    \item Медленно работает, но больше «интерактивности»
-    \end{itemize}
+\item \textbf<1>{Fetch} \only<1>{$\leftarrow$ optimized}
+\item \textbf<1>{Decode} \only<1>{$\leftarrow$ optimized}
+\item \textbf<2>{Execute} \only<2>{$\rightarrow$ to be optimized}
+\item \textbf<2>{Memory} \only<2>{$\rightarrow$ to be optimized}
+\item \textbf<2>{Write-Back} \only<2>{$\rightarrow$ to be optimized}
+\end{itemize}
+\end{frame}
+
+\section{Interpretation, Compilation, Translation}
+
+\begin{frame}{Translation, Compilation, Decompilation}
+\pause
+\begin{itemize}
+\item \textbf{Translation} --- \textit{generic term} describing a process of
+  code conversion from one programming language into another.
+\item \textbf{Compilation} --- \textit{translation} from high-level programming
+  language into low-level programming language.
+\item \textbf{Decompilation} --- \textit{translation} from low-level programming
+  language into a high-level programming language.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Interpretation and Compilation For High-Level Programming Languages}
+\begin{itemize}
+\item BASIC, Python, Shell\dots
+  \begin{itemize}
+  \item Read a line --- detect a command --- execute the command.
+  \item Slow but more <<interractive>>.
+  \end{itemize}
 \item Fortran, C, Pascal\dots
-    \begin{itemize}
-    \item Первый проход: распознавание команд языка и преобразование их в машинный код
-    \item Второй проход: исполнение машинного кода
-    \end{itemize}
+  \begin{itemize}
+  \item First stage: read a line --- detect a command --- translate to machine code.
+  \item Second stage: execute the machine code.
+  \end{itemize}
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Двоичная трансляция}
+\begin{frame}{Binary Translation}
 \begin{itemize}
-\item Входной язык — гостевой машинный код
-\item Целевой язык — хозяйский машинный код
-\item ДТ — перевод кода гостевой программы, записанной в гостевой ISA, в эквивалентный код в терминах хозяйской ISA
-\item Ради чего: многократное исполнение результатов трансляции
+\item Input: guest machine code.
+\item Output: host machine code.
+\item \textbf{Binary translation, BT} --- translation of guest software written in
+  guest ISA into equivalent code in host ISA.
+\item What for? \pause Repetitive execution of translation result. Optimizations.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Статическая и динамическая ДТ}
+\begin{frame}{Static and Dynamic Binary Translation}
 \begin{itemize}
-    \item \textit{Статическая} трансляция исполняется заранее, до исполнения первой инструкции
-    \item Результат статической трансляции сохраняется на диске
-    \item \textit{Динамическая} трансляция происходит непосредственно во время симуляции
-    \item Результат динамической трансляции хранится в памяти
-    \item Динамическая трансляция чередуется с исполнением генерированного кода
+\item \textit{Static} binary translator converts a target executable file
+  without running it.
+\item Result of static BT is saved on disk.
+\item It is very difficult to do correctly.
+\vfill
+\item \textit{Dynamic} binary translation happens during simulation.
+\item Result of dynamic BT is saved in memory.
+\item Dynamic BT can adopt to program's run-time environment.
+\item Dynamic BT alternates with execution of the generated code.
 \end{itemize}
-
 \end{frame}
 
-\begin{frame}[fragile]{Фазы динамической ДТ}
+\begin{frame}{Stages of Dynamic Binary Translation}
 \centering
 \inputpicture{dynamic-bt}
 \end{frame}
 
-\section{Шаблонная трансляция}
+\section{Template-Based Translation}
 
-\begin{frame}{Алгоритм 1: шаблонная трансляция}
+\begin{frame}{Algorithm 1: Template-Based Translation}
 \begin{tikzpicture}[font=\scriptsize, >=latex, node distance=2.cm]
 
 \node[draw, double copy shadow={shadow xshift=3pt,shadow yshift=-3pt}, fill=white] (decode) {decode_t};
-\node[rectangle split, rectangle split parts=4, draw, right=of decode, anchor=text west, minimum width=1.8cm] (templates-raw) {Шаблон 1\nodepart{two} Шаблон 2\nodepart{three} Шаблон 3\nodepart{four} Шаблон 4};
+\node[rectangle split, rectangle split parts=4, draw, right=of decode, anchor=text west, minimum width=1.8cm] (templates-raw) {Template 1\nodepart{two} Template 2\nodepart{three} Template 3\nodepart{four} Template 4};
 
+\node[rectangle split, rectangle split parts=4, draw, right=of templates-raw, minimum width=1.8cm] (templates) {Capsule 1\nodepart{two} Capsule 2\nodepart{three} Capsule 3\nodepart{four} Capsule 4};
 
-\node[rectangle split, rectangle split parts=4, draw, right=of templates-raw, minimum width=1.8cm] (templates) {Капсула 1\nodepart{two} Капсула 2\nodepart{three} Капсула 3\nodepart{four} Капсула 4};
+\node[draw, above=1cm of templates-raw, align=left] (md) {Encodings and Offsets\\for Host Instruction\\Operands};
 
-\node[draw, above=1cm of templates-raw, align=left] (md) {Кодировки и смещения\\операндов хозяйских\\инструкций};
-
-\draw[->] (decode) -- (templates-raw.text west) node[midway, above]{\tiny Выбор шаблонов};
+\draw[->] (decode) -- (templates-raw.text west) node[midway, above]{\tiny Template Selection};
 \draw[->] (templates-raw) -- (templates);
 \coordinate[above=0.5cm of templates] (junction);
-\draw[->] (decode) |- (junction) -- (templates) node[pos=0, above]{\tiny Подстановка аргументов};
+\draw[->] (decode) |- (junction) -- (templates) node[pos=0, above]{\tiny Argument Substitution};
 \draw[] (md) |- (junction);
-
 \end{tikzpicture}
-
 \end{frame}
 
-\begin{frame}[fragile]{Алгоритм 1: шаблонная трансляция}
+\begin{frame}[fragile]{Algorithm 1: Template-Based Translation}
 \begin{tiny}
 \begin{itemize}
-    \item start_addr — гостевой адрес начала кода
-    \item start_buf — хозяйский буфер
+    \item start_addr --- guest code's start address,
+    \item start_buf --- host buffer.
 \end{itemize}
 \end{tiny}
 
-\begin{verbatim}
+\begin{lstlisting}
 translate(start_addr, start_buf) {
     PC = start_addr; bufptr = start_buf;
     while (!enough) {
@@ -133,49 +143,45 @@ translate(start_addr, start_buf) {
     }
     memcpy(bufptr, glue_capsule, glue_length);
 }
-\end{verbatim}
+\end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile]{Алгоритм 1: исполнение}
+\begin{frame}[fragile]{Algorithm 1: Execution}
 
-\begin{verbatim}
+\begin{lstlisting}
 execute(start_buf) {
     load_simulated_state();
     goto start_buf;
 }
-\end{verbatim}
+\end{lstlisting}
 \pause
-или
-\begin{verbatim}
+or
+\begin{lstlisting}
 typedef void (*fblock)(void);
 execute(start_buf) {
     load_simulated_state();
     ((fblock)start_buf)();
 }
-\end{verbatim}
-
+\end{lstlisting}
 \end{frame}
 
-\begin{frame}{Капсула}
-
+\begin{frame}{Capsule}
 \begin{small}
 \begin{tabular}{p{0.45\textwidth}p{0.45\textwidth}}
-Гостевой код, Intel~64 (64 бит) & Хозяйский код, IA-32 (32 бит)
+Guest code, Intel~64 (64-bit) & Host code, Intel~IA-32 (32-bit)
 \end{tabular}
 \end{small}
-
 \vfill
-
 \centering
-\inputpicture{capsule}\pause
-
-Вопрос: что из семантики \texttt{ADDQ} забыто в описании капсулы?
+\inputpicture{capsule}
+\pause
+Question: What part of \texttt{ADDQ} semantics is missing?
 \end{frame}
 
-\begin{frame}{Подстановка аргументов в капсулу}
+\begin{frame}{Argument Substitution}
 
 {\ttfamily\small
-{\sffamily Регистры:}
+{\sffamily Registers:}
 
 \begin{tabular}{ll}  
 c5 f4 58 c\textcolor{red}{8}  &    vaddps \textcolor{red}{\%ymm0},\%ymm1,\%ymm1 \\
@@ -186,92 +192,85 @@ c4 c1 74 58 c\textcolor{red}{f} &  vaddps \textcolor{red}{\%ymm15},\%ymm1,\%ymm1
 c5 f4 58 c8  &    vaddps \%ymm0,\%ymm1,\%ymm1 \\
 c5 ec 58 d0  &    vaddps \%ymm0,\%ymm2,\%ymm2 \\
 c5 c4 58 f8  &    vaddps \%ymm0,\%ymm3,\%ymm3 \\\pause
-c4 e1 74 58 c8 &  vaddps \%ymm0,\%ymm1,\%ymm1 \# Мнемоника та же!\\
+c4 e1 74 58 c8 &  vaddps \%ymm0,\%ymm1,\%ymm1 \# Mnemonic is the same!\\
 \end{tabular}
-
 \pause
-{\sffamily Литералы:}
+{\sffamily Literals:}
 \begin{tabular}{ll}
 67 c7 85 \textcolor{blue}{00 01 00 00} \textcolor{green}{dd cc bb aa}   & movl \textcolor{green}{\$0xaabbccdd},\textcolor{blue}{0x100}(\%ebp)
 \end{tabular}
-} % \ttfamily
+}
 
 \end{frame}
 
-\section{Трансляция с IR}
+\section{Translation with Intermediate Representation}
 
-\begin{frame}{Алгоритм 2: JIT. Генерация IR}
+\begin{frame}{Algorithm 2: JIT. IR generation}
 \centering
 \begin{tikzpicture}[font=\small, >=latex]
 
-\node[rectangle split, rectangle split parts=2, draw, double copy shadow={shadow xshift=3pt,shadow yshift=-3pt}, fill=white] (sr) {Эмуляционная процедура\nodepart{two} С (подмножество)};
-\node[rectangle split, rectangle split parts=2, draw, below=1cm of sr, double copy shadow={shadow xshift=3pt,shadow yshift=-3pt}, fill=white] (template) {Шаблон\nodepart{two} IR: байткод+SSA};
-\draw[->] (sr) -- (template) node[midway, right] {SR-компилятор};
+\node[rectangle split, rectangle split parts=2, draw, double copy shadow={shadow xshift=3pt,shadow yshift=-3pt}, fill=white] (sr) {Simulation routine\nodepart{two} С (subset)};
+\node[rectangle split, rectangle split parts=2, draw, below=1cm of sr, double copy shadow={shadow xshift=3pt,shadow yshift=-3pt}, fill=white] (template) {Template\nodepart{two} IR: bytecode+SSA};
+\draw[->] (sr) -- (template) node[midway, right] {SR-compiler};
 
-% \node[above = of sr] (compile-time) {При компиляции};
 \end{tikzpicture}
 \end{frame}
 
-\begin{frame}{Алгоритм 2: JIT. Стадия симуляции}
+\begin{frame}{Algorithm 2: JIT. Simulation Stage}
 \begin{tikzpicture}[font=\scriptsize, >=latex, node distance=1.cm]
 
-% \node[] (run-time) {При симуляции};
-
 \node[draw, double copy shadow={shadow xshift=3pt,shadow yshift=-3pt}, fill=white] (decode) {decode_t};
-\node[rectangle split, rectangle split parts=4, draw, right=of decode, anchor=text west, minimum width=1.8cm] (templates) {Шаблон 1\nodepart{two} Шаблон 2\nodepart{three} Шаблон 3\nodepart{four} Шаблон 4};
+\node[rectangle split, rectangle split parts=4, draw, right=of decode, anchor=text west, minimum width=1.8cm] (templates) {Template 1\nodepart{two} Template 2\nodepart{three} Template 3\nodepart{four} Template 4};
 \draw[->] (decode) -- (templates.text west);
 
-\node[draw, below=0.5cm of templates, minimum height=2cm, align=left, minimum width=1.8cm] (opt-template) {Шаблон\\блока};
-\draw[->] (templates) -- (opt-template) node[midway, right] {Оптимизация};
+\node[draw, below=0.5cm of templates, minimum height=2cm, align=left, minimum width=1.8cm] (opt-template) {Block\\template};
+\draw[->] (templates) -- (opt-template) node[midway, right] {Optimization};
 
-\node[rectangle split, rectangle split parts=3, align=left, draw, below=0.5cm of opt-template, double copy shadow={shadow xshift=3pt,shadow yshift=-3pt}, fill=white] (md) {Машинное описаниe (md)\nodepart{two} Байткод → машинный код\nodepart{three} Определения хоз. регистров};
+\node[rectangle split, rectangle split parts=3, align=left, draw, below=0.5cm of opt-template, double copy shadow={shadow xshift=3pt,shadow yshift=-3pt}, fill=white] (md) {Machine Description (md)\nodepart{two} Bytecode $\rightarrow$ machine code\nodepart{three} Host Register Definition};
 
 \coordinate[right=2.5cm of opt-template] (junction);
 
-\node[draw, right=1cm of junction, rectangle split, rectangle split parts=2,] (host-code) {Блок трансляции\nodepart{two} Хозяйский машинный код};
+\node[draw, right=1cm of junction, rectangle split, rectangle split parts=2,] (host-code) {Translation Block\nodepart{two} Host machine code};
 
-\draw[->] (md) -| node[pos=0.5, right, align=left] {Распределение регистров\\Кодогенерация} (junction) -- (host-code);
+\draw[->] (md) -| node[pos=0.5, right, align=left] {Register Allocation\\Code Generation} (junction) -- (host-code);
 \draw[] (opt-template) -- (junction);
 
 \end{tikzpicture}
-    
 \end{frame}
 
-\begin{frame}{Оптимизации}
+\begin{frame}{Optimizations}
 \centering
 \inputpicture{bt-optimization}
-
 \end{frame}
 
-\begin{frame}{Связь между блоками трансляции}
+\begin{frame}{Connection between Translation Blocks}
 \centering
 \inputpicture{bb-translation}
 \end{frame}
 
-\begin{frame}{Почему оптимизации при ДТ затруднительны}
+\begin{frame}{Why Optimizations During BT Are Complicated?}
 
 \begin{itemize}
-    \item В отличие от ЯВО, машинный код содержит меньше информации об исходном алгоритме
-    \item Нельзя делать многие предположения, необходимые для компиляторных оптимизаций, без нарушения корректности
-    \item В случае динамической ДТ оптимизации ограничены длительностью их работы
-\end{itemize}\pause
-
-\begin{itemize}
-\item Адреса переменных — их нет
-\item Границы процедур — их нет
-\item Адреса переходов — известна только часть из них
+\item Machine code has less information about the algorithm compared to code in
+  high-level programming languages.
+\item Many compiler optimizations cannot be used.
+\item BT optimizations are limited in time.
 \end{itemize}
-
-
+\pause
+\begin{itemize}
+\item Variable addresses --- not available.
+\item Function boundaries --- not available.
+\item Branch addresses --- partially known.
+\end{itemize}
 \end{frame}
 
-\section{Трудности ДТ}
+\section{Difficulties of Binary Translation}
 
-\begin{frame}{Самомодифицирующийся код (self modifying code)}
+\begin{frame}{Self Modifying Code}
 \centering
 \begin{tikzpicture}[font=\scriptsize, >=latex]
-    \node (guest) {Гость};
-    \node[right=3cm of guest] (host) {Хозяин};
+    \node (guest) {Guest};
+    \node[right=3cm of guest] (host) {Host};
 
     \node[draw, minimum width = 1.5cm, minimum height = 0.5cm, below =0.5cm of guest] (gi1) {};
     \node[draw, minimum width = 1.5cm, minimum height = 0.5cm, below = 0cm of gi1] (gi2) {};
@@ -286,21 +285,19 @@ c4 e1 74 58 c8 &  vaddps \%ymm0,\%ymm1,\%ymm1 \# Мнемоника та же!\\
     \draw[->] (gi3.east) to (hi3.west);
     \pause
     \node[draw = red, minimum width = 2cm, cross out] at (gi3) {};
-    \draw[->, dashed, thick, ] (hi2.center) .. controls (2, -4) and (-3, -3) .. (gi3.west) node[pos=0.5, below] {Запись в память};
-    
+    \draw[->, dashed, thick, ] (hi2.center) .. controls (2, -4) and (-3, -3) .. (gi3.west) node[pos=0.5, below] {Memory Write};
 \end{tikzpicture}
-
 \end{frame}
 
-\begin{frame}{Обнаружение кода 1}
+\begin{frame}{Code Detection 1}
 \begin{itemize}
-    \item Найти границы инструкций
-    \item Отличить код от данных
+    \item Find instruction boundaries,
+    \item Distinguish code from data.
 \end{itemize}
 \centering
 \begin{tikzpicture}[font=\scriptsize, >=latex]
-    \node (guest) {Гость};
-    \node[right=3cm of guest] (host) {Хозяин};
+    \node (guest) {Guest};
+    \node[right=3cm of guest] (host) {Host};
 
     \node[draw, minimum width = 2cm, minimum height = 0.5cm, below =0.5cm of guest] (gi1) {};
     \node[draw, minimum width = 2cm, minimum height = 0.5cm, below = 0cm of gi1] (gi2) {};
@@ -322,50 +319,45 @@ c4 e1 74 58 c8 &  vaddps \%ymm0,\%ymm1,\%ymm1 \# Мнемоника та же!\\
 
 \end{frame}
 
-\begin{frame}{Обнаружение кода 2}
+\begin{frame}{Code Detection 2}
 \begin{center}
 \inputpicture{byte-shift}
 \end{center}
 
-По этой причине статическое пре-декодирование не всегда возможно
+That's why static BT is not always possible.
 \end{frame}
 
-\begin{frame}{Опережающая трансляция}
+\begin{frame}{Outrunning Translation}
 \centering
 \begin{tikzpicture}[>=latex, font=\small, align=left]
-    \node[draw] (tb100) {Блок трансляции\\0x100 → 0xa000};
+    \node[draw] (tb100) {Translation Block\\0x100 $\rightarrow$ 0xa000};
     \node[above=of tb100] (pred) {\dots};
-    \node[draw, below= of tb100] (tb110) {Блок трансляции\\0x110 → 0xa100};
-    \node[draw, left=of tb110.south west, anchor=north east] (tb130) {Блок трансляции\\0x130 → 0xa200};
+    \node[draw, below= of tb100] (tb110) {Translation Block\\0x110 $\rightarrow$ 0xa100};
+    \node[draw, left=of tb110.south west, anchor=north east] (tb130) {Translation Block\\0x130 $\rightarrow$ 0xa200};
     \node[below=of tb130] (cont) {\dots};
     \draw[->] (tb100) -- (tb110);
     \draw[->] (tb110.220) |- (tb130);
     \draw[->] (tb130) -- (cont);
     \draw[->] (pred) -- (tb100);
     
-    \uncover<1-2>{\node[draw=black!30, right=of tb110.south east, anchor=north west, text=black!30] (notb200) {Нет трансляции\\0x200 → ?};}
+    \uncover<1-2>{\node[draw=black!30, right=of tb110.south east, anchor=north west, text=black!30] (notb200) {No Translation\\0x200 $\rightarrow$ ?};}
     \uncover<2>{\draw[->, very thick] (pred) -- (tb100.center) -- (tb110.center) |- (notb200);}
 
-    \uncover<3>{\node[draw, right=of tb110.south east, anchor=north west, cloud, aspect=2]  (in-progress) {Трансляция\\0x200};}
+    \uncover<3>{\node[draw, right=of tb110.south east, anchor=north west, cloud, aspect=2]  (in-progress) {Translation\\0x200};}
 
-    \uncover<4->{\node[draw, right=of tb110.south east, anchor=north west] (tb200) {Блок трансляции\\0x200 → 0xb000};}
+    \uncover<4->{\node[draw, right=of tb110.south east, anchor=north west] (tb200) {Translation Block\\0x200 $\rightarrow$ 0xb000};}
     \uncover<4->{\draw[->] (tb110) |- (tb200);}
 
-%     \uncover<4>{;}
     \uncover<5>{\draw[->, very thick] (pred) -- (tb100.center) -- (tb110.center) |- (tb200);}
-    
 \end{tikzpicture}
-
 \end{frame}
 
-\begin{frame}{Трансляция горячего кода}
-\only<1>{Исполнение 1: интерпретация с трассированием}
-\only<2>{Исполнение $N$: обнаружение «горячих» участков трассы}
-\only<3>{Трансляция трассы в блоки}
-\only<4>{Подстановка новых блоков в трассу}
-
+\begin{frame}{Hot Path Translation}
+\only<1>{Execution 1: use interpreter with tracing.}
+\only<2>{Execution $N$: detect a <<hot path>> in the trace.}
+\only<3>{Translate the <<hot path>> into a block.}
+\only<4>{Insert the new block into the trace.}
 \vfill
-
 \centering
 \begin{tikzpicture}[>=latex, font=\small]
 \uncover<1,2,4>{
@@ -408,59 +400,44 @@ c4 e1 74 58 c8 &  vaddps \%ymm0,\%ymm1,\%ymm1 \# Мнемоника та же!\\
 \end{tikzpicture}
 \end{frame}
 
-\section{Заключение}
+\section{Conclusions}
 
-\begin{frame}{Итоги}
+\begin{frame}{Summary}
 \begin{itemize}
-\item Интерпретация, компиляция, трансляция
-\item Двоичная трансляция
-\item Статическая и динамическая трансляция
-\item Шаблон, капсула
-\item Промежуточное представление
-\item Самомодифицирующийся код
-\item Обнаружение кода
-\item Сложности оптимизации кода при ДТ
+\item Interpretation, Compilation, Translation.
+\item Binary Translation.
+\item Static and Dynamic Binary Translation.
+\item Template, Capsule.
+\item Intermediate Representation.
+\item Self-Modifying Code.
+\item Code Detection.
+\item Optimization Complexities in Binary Translation.
 \end{itemize}
 \end{frame}
 
-
-\begin{frame}[allowframebreaks]{Литература}
+\begin{frame}[allowframebreaks]{Bibliography}
 \begin{thebibliography}{99}
-    \bibitem{vms} Jim Smith and Ravi Nair. Virtual Machines: Versatile Platforms for Systems and Processes. Morgan Kaufmann - 2005    
-    \bibitem{qemu} Fabrice Bellard. QEMU, a Fast and Portable Dynamic Translator \url{http://www.usenix.org/publications/library/proceedings/usenix05/tech/freenix/full_papers/bellard/bellard.pdf}
-    \bibitem{fx32} Anton Chernoff and Ray Hookway. {DIGITAL FX!32} Running 32-Bit x86 Applications on {Alpha} {NT} \url{http://www.usenix.org/publications/library/proceedings/usenix-nt97/full_papers/chernoff/chernoff.pdf}
-    \bibitem{ia32el} Leonid Baraz [et al.] IA-32 Execution Layer: a Two-Phase Dynamic Translator Designed to Support IA-32 Applications on Itanium®-Based Systems. \url{http://www.microarch.org/micro36/html/pdf/goldenberg-IA32ExecutionLayer.pdf}
+  \bibitem{} \textit{Jim Smith and Ravi Nair}. Virtual Machines: Versatile
+  Platforms for Systems and Processes.
+  \bibitem{} \textit{Fabrice Bellard}. QEMU, a Fast and Portable Dynamic
+  Translator.
+  \bibitem{} \textit{Anton Chernoff and Ray Hookway.} {DIGITAL FX!32} Running
+  32-Bit x86 Applications on {Alpha} {NT}.
+  \bibitem{} \textit{Leonid Baraz [et al.]} IA-32 Execution Layer: a Two-Phase
+  Dynamic Translator Designed to Support IA-32 Applications on
+  Itanium\reg-Based Systems.
 \end{thebibliography}
 \end{frame}
 
-\begin{frame}{На следующей лекции}
-\centering
-
-Ещё быстрее! Прямое исполнение
-
+\begin{frame}{On the Next Lecture:}
+\begin{itemize}
+\item Direct Execution.
+\item Preliminary Scanning.
+\item Hardware Support.
+\item{<<Gear Shifting>> for Simulation Modes.}
+\end{itemize}
 \end{frame}
 
-\begin{frame}
-
-{\huge{Спасибо за внимание!}\par}
-
-\vfill
-
-Слайды и материалы курса доступны по адресу \url{http://is.gd/ivuboc} % http://atakua.doesntexist.org/wordpress/simulation-course-russian/
-
-\vfill
-
-\tiny{\textit{Замечание}: все торговые марки и логотипы, использованные в данном материале, являются собственностью их владельцев. Представленная здесь точка зрения отражает личное мнение автора, не выступающего от лица какой-либо организации.}
-
-\end{frame}
+\finalslide
 
 \end{document}
-
-
-\begin{frame}{Время компиляции и время исполнения}
-\todo новое
-\end{frame}
-
-\begin{frame}{Переключение таблиц}
-\todo новое
-\end{frame}
