@@ -1,5 +1,7 @@
 \input{../common/config}
 
+% TODO: convert from AT&T to Intel.
+
 \usepackage{tikz}
 \usetikzlibrary{shapes, calc, arrows, decorations.markings, decorations.pathreplacing, decorations.pathmorphing, decorations, patterns, chains, snakes, backgrounds, positioning, fit, shadows}
 
@@ -69,6 +71,7 @@
   \item First stage: read a line --- detect a command --- translate to machine code.
   \item Second stage: execute the machine code.
   \end{itemize}
+% TODO: add java
 \end{itemize}
 \end{frame}
 
@@ -165,6 +168,8 @@ execute(start_buf) {
 \end{lstlisting}
 \end{frame}
 
+% TODO: Add JIT-template for the same ADDQ instruction
+
 \begin{frame}{Capsule}
 \begin{small}
 \begin{tabular}{p{0.45\textwidth}p{0.45\textwidth}}
@@ -254,6 +259,7 @@ c4 e1 74 58 c8 &  vaddps \%ymm0,\%ymm1,\%ymm1 \# Mnemonic is the same!\\
 \item Machine code has less information about the algorithm compared to code in
   high-level programming languages.
 \item Many compiler optimizations cannot be used.
+% TODO: Examples with clarification.
 \item BT optimizations are limited in time.
 \end{itemize}
 \pause
