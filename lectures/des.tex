@@ -1,20 +1,35 @@
 \input{../common/config}
-\title{Симуляция, управляемая событиями}
-%\title{Исполняющие и неисполняющие модели. Симуляция многопроцессорных систем}
+\title{Event-Driver Simulation. Multi-processor Simulation}
 
 \begin{document}
 
-\begin{frame}
-    \maketitle
+\startslides
+
+\begin{frame}{On the Previous Lectures:}
+\begin{itemize}
+\item Processor simulation:
+  \begin{itemize}
+  \item Interpreters (switched, threaded, cached) --- \textbf{slow}.
+  \item Binary translators (templates, IR) --- \textbf{faster} but still
+    \textbf{slow}
+  \item Direct execution (scanning, HW support) --- almost
+    \textbf{the fastest}.
+  \end{itemize}
+\item{<<Gear shifting>> for processor simulation modes.}
+\end{itemize}
 \end{frame}
 
-\begin{frame}
-    \tableofcontents
+\begin{frame}{Questions}
+\begin{itemize}
+\item When direct execution can be used?\pause
+\item Why <<naive>> approach doesn't work?\pause
+\item How the problems can be solved?\pause
+\item Other areas of application for patching mechanism?
+\end{itemize}
 \end{frame}
 
-\begin{frame}{Платформа}
+\begin{frame}{Simulated System}
 \centering
-
 \begin{tikzpicture}[>=latex, font=\small, node distance = 0.5cm]
 
 \begin{scope}[minimum height=0.8cm]
@@ -31,7 +46,6 @@
 
     \node[draw, below=2cm of mmu, text width=4.5cm, align = center, ] (dram) {RAM};
     \node[draw, right=of pic, ] (pit) {PIT};
-
 \end{scope}
 
 \draw[<->] (cpu) -- (cpu |- mmu.north);
@@ -43,19 +57,15 @@
 \draw[<->] (addr-decoder) -| (pit);
 \draw[<->] (addr-decoder) -- (addr-decoder |- dram.north);
 
-
 \draw[->, ] (pic) -- (cpu);
 \draw[->, ] (pit) -- (pic);
 \draw[->, ] (pic) -- (op) -| (cpu2);
-
 \end{tikzpicture}
-
 \end{frame}
 
-\section{Таймер}
+\section{Timer}
 
-\begin{frame}{Пример №1: таймер}
-
+\begin{frame}{Example \No1: Timer}
 \centering
 \begin{tikzpicture}[>=latex]
 \coordinate (center) at (0,0);
@@ -84,14 +94,11 @@
 \draw (quartz) ++(0.25,0) -- (counter);
 \draw[->] (comparator) -- (int);
 \node[draw, dashed, fit = (reference) (counter) (comparator)] {};
-
 \end{tikzpicture}
-
 \end{frame}
 
-\begin{frame}{Диаграмма работы}
+\begin{frame}{Timing Diagram}
 \centering
-
 \begin{tikzpicture}[>=latex]
 % set clock and #INT time lines
 \draw[->] (0,0) -- (10,0) node[pos=0.95, below] {CLK};
@@ -120,9 +127,8 @@
 \end{tikzpicture}
 \end{frame}
 
-\begin{frame}[fragile]{Моделирование с фиксированным шагом}
-
-\begin{verbatim}
+\begin{frame}[fragile]{Simulation With a Fixed Step Size}
+\begin{lstlisting}
 on_clk() {
   if (enable) counter +=1;
   if (counter == reference) {
@@ -137,24 +143,23 @@ on_reset() {
     reference = 0;
     counter = 0;
 }
-\end{verbatim}
+\end{lstlisting}
 \end{frame}
 
-\begin{frame}{Типичные значения параметров таймера}
-
+\begin{frame}{Typical Timer Characteristics}
 \begin{itemize}
-    \item $\mathsf{F} \approx 10\ \text{МГц}$
-    \item $\mathsf{reference} > 10^3$
-    \item \#RESET — не чаще одного раза в $\approx$ 100 секунд
+    \item $\mathsf{F} \approx 10$ MHz,
+    \item $\mathsf{reference} > 10^3$,
+    \item \#RESET --- no more than one per $\approx 100$ seconds.
 \end{itemize}
-
-$\Rightarrow$ внешне видимый эффект (\#INT) происходит примерно один раз в $10^3$ тактов.
-
+\vfill
+$\Rightarrow$ externally visible effect (\#INT) occurs approximately once per
+$10^3$ cycles.
 \end{frame}
 
-\begin{frame}{Оптимизация}
-Не моделировать внешне ненаблюдаемые действия.
-
+\begin{frame}{Optimization}
+No modeling for externally invisible actions.
+\vfill
 \centering
 \begin{tikzpicture}[>=latex]
 % set clock and #INT time lines
@@ -178,11 +183,10 @@ $\Rightarrow$ внешне видимый эффект (\#INT) происход�
 \draw[thick] (tick1) -- (tick10) -- ++(0, 0.5) -- ++(0, -0.5) --
             (tick11) -- (tick17) -- ++(0, 0.5) -- ++(0, -0.5) -- (tick18) -- (tick19);
 \end{tikzpicture}
-
 \end{frame}
 
-\begin{frame}[fragile]{Моделирование событий}
-\begin{verbatim}
+\begin{frame}[fragile]{Discrete Event Simulation}
+\begin{lstlisting}
 struct event_t {
     time_t delta;
     dev_t *device;
@@ -194,14 +198,12 @@ foreach e in event_queue {
     e.function(e.device);
     time +=e.delta;
 }
-\end{verbatim}
-
+\end{lstlisting}
 \end{frame}
 
-\section{Отложенный ответ}
+\section{Delayed Response}
 
-\begin{frame}{Пример №2: ожидание ответа}
-
+\begin{frame}{Example \No2: Waiting for a Response}
 \begin{center}
 \begin{tikzpicture}[>=latex]
 \node[draw, inner ysep=1cm] (dev1) {\texttt{dev1}};
@@ -212,383 +214,344 @@ foreach e in event_queue {
 \draw[->] (dev2) -- (dev1) node[midway] {\tiny{/}} node[midway, above] {data};
 
 \draw[->] (dev2.240) -- (dev1.300) node[midway, above] {\#RDY};
-\end{tikzpicture}                 \end{center}
+\end{tikzpicture}
+\end{center}
 
 \begin{enumerate}
-    \item Запрос от \texttt{dev1}: address.
-    \item \texttt{dev2} вычисляет data.
-    \item \texttt{dev2} оповещает \texttt{dev1} о готовности данных \textit{через некоторое время} $\Delta T$ с помощью \#RDY.
-    \item \texttt{dev1} после отправки address и до получения \#RDY работает независимо.
+\item Request from \texttt{dev1}: \texttt{address}.
+\item \texttt{dev2} calculates \texttt{data}.
+\item \texttt{dev2} notifies \texttt{dev1} about data readiness
+  \textit{after some time} $\Delta T$ by \#RDY.
+\item \texttt{dev1} works independently from \texttt{address} request to \#RDY
+  response.
 \end{enumerate}
-
 \end{frame}
 
-\begin{frame}{Реализация}
-
-\texttt{dev1:}
-\begin{enumerate}
-    \item dev2.read(address)
-\end{enumerate}
-\texttt{dev2:}
-\begin{enumerate}
-    \item data = get_data(address)
-    \item event_queue.post($\Delta T$, dev1, rdy())
-\end{enumerate}
-\texttt{dev1:}
-\begin{enumerate}
-    \item rdy(): чтение data.
-\end{enumerate}
-
+\begin{frame}{Implementation}
+\texttt{
+  dev1:
+  \begin{enumerate}
+    \item dev2.read(address);
+  \end{enumerate}
+  dev2:
+  \begin{enumerate}
+    \item data = get_data(address);
+    \item event_queue.post($\Delta T$, dev1, rdy());
+  \end{enumerate}
+  dev1:
+  \begin{enumerate}
+    \item rdy() { read(data); }
+  \end{enumerate}
+}
 \end{frame}
 
-\section{Теория}
+\section{Theory}
 
-\begin{frame}{Очередь событий}
+\begin{frame}{Event Queue}
 \centering
-
 \begin{tikzpicture}[>=latex, font=\scriptsize]
-    \draw[->] (0,0) -- (10,0) node[pos=0.9, below] (sim-time) {Время};
+  \draw[->] (0,0) -- (10,0) node[pos=1, below, align=center] (sim-time) {Simulated \\ Time};
 
-    \foreach \x in { 1, 2, 3, 4, 5, 6, 7, 8, 9} {
-        \draw (\x,-0.15) -- (\x,0.15) node (tick\x) {};
-    };
-    \node[shape=dart, draw, shape border rotate=270 ] at (2, 0.5) (currevent) {};
-    \node[draw, arrow box, arrow box arrows={north:.7cm}, text width=2.5cm, align=center, below = 0cm of currevent] (tsim) {Текущее симулируемое время};
-    \node[align=center, above=0.2cm of currevent, text width=2cm]  {Обрабатываемое событие};
+  \foreach \x in { 1, 2, 3, 4, 5, 6, 7, 8, 9} {
+      \draw (\x,-0.15) -- (\x,0.15) node (tick\x) {};
+  };
+  \node[shape=dart, draw, shape border rotate=270 ] at (2, 0.5) (currevent) {};
+  \node[draw, arrow box, arrow box arrows={north:.7cm}, text width=2.5cm, align=center, below = 0cm of currevent] (tsim) {Current Time};
+  \node[align=center, above=0.2cm of currevent, text width=2cm]  {Processed Event};
 
-    \node[shape=dart, draw, shape border rotate=270 ] at (5, 0.5) (futureevent) {};
-    \node[align=center, above=0.2cm of futureevent, text width=2cm] {Запланированное событие};
+  \node[shape=dart, draw, shape border rotate=270 ] at (5, 0.5) (futureevent) {};
+  \node[align=center, above=0.2cm of futureevent, text width=2cm] {Planned Event};
 
-    \node[fill=black!10, shape=dart, draw, shape border rotate=270 ] at (7, 0.5) (newbornevent) {};
-    \node[align=center, above=0.2cm of newbornevent, text width=1.5cm] {Новое событие};
+  \node[fill=black!10, shape=dart, draw, shape border rotate=270 ] at (7, 0.5) (newbornevent) {};
+  \node[align=center, above=0.2cm of newbornevent, text width=1.5cm] {New Event};
 
-    \node[shape=dart, draw, shape border rotate=270 ] at (9, 0.5) (futureevent2) {};
-    \node[shape=dart, draw, shape border rotate=270, above=0cm of futureevent2 ] (futureevent3) {};
+  \node[shape=dart, draw, shape border rotate=270 ] at (9, 0.5) (futureevent2) {};
+  \node[shape=dart, draw, shape border rotate=270, above=0cm of futureevent2 ] (futureevent3) {};
 
-    \draw[dashed, ->] (currevent.south) .. controls +(1,-0.5) and +(-1,-0.5) .. (newbornevent.south); % node[below, pos=0.7, text width=3cm] {Обработка события порождает новое событие в будущем};
-
-    \end{tikzpicture}
-
+  \draw[dashed, ->] (currevent.south) .. controls +(1,-0.5) and +(-1,-0.5) .. (newbornevent.south);
+\end{tikzpicture}
 \end{frame}
 
-\begin{frame}{Содержимое и результаты}
-Что содержится в одном событии:
+\begin{frame}{Event Content and Results}
+An event contains:
 \begin{itemize}
-    \item функция, которая должна быть вызвана,
-    \item объект, состояние которого изменяется.
+    \item a function to be called,
+    \item an object whose state is to be changed.
 \end{itemize}
 
-Результаты обработки события:
+Event handling results:
 \begin{itemize}
-    \item изменение состояния системы,
-    \item добавление/уничтожение событий.
+    \item changes to state of the simulated system,
+    \item added or destroyed events.
 \end{itemize}
-
 \end{frame}
 
-\begin{frame}{Вопросы}
-Что будет происходить с очередью событий при
+\begin{frame}{Questions}
+What should happen to the event queue when:
 \begin{enumerate}
-    \item записи в \texttt{reference} или \#RESET?
-    \item выключении таймера (ENABLE ← 0)?
-    \item чтении регистра \texttt{counter}?
+  \item \texttt{reference} written to?\pause
+  \item \#RESET happens?\pause
+  \item timer is disabled (ENABLE $\leftarrow$ 0)?\pause
+  \item \texttt{counter} is read?
 \end{enumerate}
-
 \end{frame}
 
-
-\begin{frame}[fragile]{Алгоритм DES}
-
-\begin{verbatim}
+\begin{frame}[fragile]{Discrete Event Simulation Algorithm}
+\begin{lstlisting}
 struct event_t {
     time_t delta;
     dev_t *device;
     (*function)();
 }
-uint sim_time = 0;
+
+uint64_t sim_time = 0;
 while (! empty(queue)) {
     sim_time += get_delta(queue);
     evt_t evt = pop(queue);
     evt.fn(evt.device, queue);
 }
-\end{verbatim}
-
+\end{lstlisting}
 \end{frame}
 
-\begin{frame}{Свойства событий}
-
+\begin{frame}{Event Properties}
 \begin{itemize}
-\item Порождаемые события не могут попасть в прошлое.
-\item Обработка событий может не только порождать события в будущем, но и отменять некоторые из них (ещё не обработанные).
-\item Несколько событий могут иметь одинаковую метку времени.
+\item New event cannot be created in the past.
+\item Event handling can create new events.
+\item Event handling can cancel future (not yet handled) events.
+\item Several events may have the same time stamp.
 \end{itemize}
-
 \end{frame}
 
-\section{Практический пример}
-
-\begin{frame}[fragile]{Пример на модели \texttt{or1k}}
-\emph{Демо}
-
-\begin{verbatim}
-simics> log-level 1
-New global log level: 1
-simics> continue-cycles 199
-[chip0] v:0x031c p:0x031c  nop
+\begin{frame}[fragile]{Simics\reg~QSP example}
+\emph{Demo: qsp-clear-linux.simics}
+\footnotesize{\begin{verbatim}
 simics> peq
-  Step  Object      Description
-
- Cycle  Object      Description
-     1  tick0       reference_reached
-499802  cosim_cell  sync_report
-999801  sim         Time Quantum End
-999801  cosim_cell  sync_block
-\end{verbatim}
-
++--------------+------------------------+----------------------------+
+|    Cycle     |         Object         |        Description         |
++--------------+------------------------+----------------------------+
+|         51367|board.mb.sb.hpet        |tim_event                   |
+|       1174759|board.mb.sb.uhci[0]     |frame_update                |
+|       1174759|board.mb.sb.uhci[1]     |frame_update                |
+|       1174759|board.mb.sb.uhci[2]     |frame_update                |
+|       1174759|board.mb.sb.uhci[3]     |frame_update                |
+|       1174759|board.mb.sb.uhci[4]     |frame_update                |
+|       1174759|board.mb.sb.uhci[5]     |frame_update                |
+|    1011284267|board.mb.cpu0.core[0][0]|performance counter overflow|
+|    8470303804|board.mb.sb.lpc         |pm1_ovf                     |
+|37955235174759|board.mb.sb.rtc         |rtc.rtc_timer               |
++--------------+------------------------+----------------------------+
+\end{verbatim}}
 \end{frame}
 
-%\section{Два класса моделей}
-\section{Косимуляция}
+\section{Co-simulation}
 
-\begin{frame}{Какие типы моделей нам известны}
-
+\begin{frame}{Simulation Techniques We Know}
 \begin{itemize}
-    \item Интерпретация\pause: процессоры. \pause
-    \item Очередь событий\pause: таймер.\pause
-    \item «Мгновенная» модель «стимул — отклик»\pause: ОЗУ.
+  \item Interpretation, binary translation, direct execution\pause:
+    processors (executing devices).\pause
+  \item Discrete event simulation\pause: timer (non-executing device).\pause
+  \item{<<Request --- response>> models\pause: memory (instant).}
 \end{itemize}
-
 \end{frame}
 
-\begin{frame}{Модель многопроцессорной системы}
-\begin{tikzpicture}[>=latex]
+\begin{frame}{Simulation Using DES and Executing Models}
+\centering
+\begin{tikzpicture}[>=latex, font=\scriptsize]
+  \draw[->] (-0.5,0) -- (10.5,0) node[pos=1, above, align=center] (sim-time) {Simulated\\Time};
 
-\node[draw, circle] (core1) {Ядро 1};
-\node[draw, circle, right = of core1] (core2) {Ядро 2};
-\node[draw, circle, right = of core2] (core3) {Ядро 3};
-\node[draw, circle, right = of core3] (core4) {Ядро $N$};
+  \begin{scope}
+  \clip (0,-2) rectangle (10, 2.5);
+  \foreach \x in { 1, 2, 3, 4, 5, 6, 7, 8, 9} {
+      \draw (\x,-0.15) -- (\x,0.15) node (tick\x) {};
+  };
 
-\coordinate[below = 2.3cm of core1] (c3);
-\coordinate[below = 1.5cm of core4] (c4);
+  \node[shape=dart, draw, shape border rotate=270 ] at (1, 0.5) (event1) {};
+  \node[shape=dart, draw, shape border rotate=270 ] at (5, 0.5) (event2) {};
+  \node[shape=dart, draw, shape border rotate=270 ] at (9, 0.5) (event3) {};
 
-\node[draw, fit = (c3) (c4), inner ysep=1pt ] (shmem) {Общая память};
+  \node[above of=event2] (deslabel) {Discrete Events};
+  \draw[->] (deslabel) -- (event1);
+  \draw[->] (deslabel) -- (event2);
+  \draw[->] (deslabel) -- (event3);
 
-\draw[<->] (core1.south) -- (shmem);
-\draw[<->] (core2.south) -- (shmem);
-\draw[<->] (core3.south) -- (shmem);
-\draw[<->] (core4.south) -- (shmem);
+  \draw (3,-0.5) ellipse[x radius = 2cm, y radius = 0.5cm] node {Processor Simulation};
+  \draw (7,-0.5) ellipse[x radius = 2cm, y radius = 0.5cm] node {Processor Simulation};
 
+  \draw (-1,-0.5) ellipse[x radius = 2cm, y radius = 0.5cm] node {} ;
+  \draw (11,-0.5) ellipse[x radius = 2cm, y radius = 0.5cm] node {} ;
+  \end{scope}
 \end{tikzpicture}
-
 \end{frame}
 
-\begin{frame}{Step-by-step}
+\begin{frame}{Co-Simulation}
+\centering
+\begin{tikzpicture}[>=latex]
+  \node[draw, circle, text width = 3cm, text badly centered] (dessim) {Discrete event simulator};
+  \node[draw, circle, text width = 3cm, text badly centered, right = 2.5cm of dessim] (execsim) {Executing model simulator};
+
+  \draw (dessim.45)   edge[bend left = 45, ->] (execsim.135);
+  \node[above=1cm of execsim.135] {\small Timer to the next event};
+  \draw (execsim.225) edge[->, bend left = 45] (dessim.315);
+  \node[below=1cm of dessim.315] {\small Number of steps/cycles};
+\end{tikzpicture}
+\end{frame}
+
+\section{Multi-Processor Simulation}
+
+\begin{frame}{Simulation of a Multi-Processor System}
+\centering
+\begin{tikzpicture}[>=latex]
+  \node[draw, circle] (core1) {Core 1};
+  \node[draw, circle, right = of core1] (core2) {Core 2};
+  \node[draw, circle, right = of core2] (core3) {Core 3};
+  \node[right = of core3] (dots) {\dots};
+  \node[draw, circle, right = of dots] (coren) {Core $N$};
+
+  \coordinate[below = 2.3cm of core1] (c3);
+  \coordinate[below = 1.5cm of coren] (c4);
+
+  \node[draw, fit = (c3) (c4), inner ysep=1pt] (shmem) {Shared memory};
+
+  \draw[<->] (core1.south) -- (shmem);
+  \draw[<->] (core2.south) -- (shmem);
+  \draw[<->] (core3.south) -- (shmem);
+  \draw[<->] (coren.south) -- (shmem);
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Step-by-Step}
 \begin{itemize}
-\item Как выдержать одновременность симуляции инструкций на всех гостевых процессорах? Исполнять не более одной инструкции за раз\pause
-\item Но это будет очень медленно! Может быть, возможно исполнять несколько гостевых инструкций без переключения?\pause
-\item А каково приблизительное время доставки сигналов от одного процессора до другого в реальности?
+\item How to maintain simultaneous instruction simulation for all guest
+  processors?\pause~\textit{Execute no more than one instruction at a time.}
+\item It will be extremely slow! Maybe it is possible to simulate multiple guest
+  instructions without switching?\pause
+\item How many?\pause~How much time inter processor communication takes in
+  hardware?
 \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{Квотированная симуляция}
-\begin{tikzpicture}[>=latex]
-\draw[->] (0,0) -- (8,0) node[pos=0.9, below] (sim-time) {Физическое время};
+% TODO: Add a slide with simulation speed from time quantum dependency using
+% qsp-clear-linux.simics
 
-\foreach \x in { 1, 2, 3, 4, 5, 6, 7} {
-    \draw (\x,-0.15) -- (\x,0.15) node (tick\x) {};
-};
-\matrix[anchor=south west] at (-0.5,0.5){
-    \node[] {CPU3}; & & & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!5] (arr3) {}; \\
+\begin{frame}[fragile]{Temporal Decoupling --- Real Time}
+\begin{center}
+\begin{tikzpicture}[>=latex]
+  \draw[->] (0,0) -- (8,0) node[pos=1, below, align=center] (sim-time) {Real\\Time};
+
+  \foreach \x in { 1, 2, 3, 4, 5, 6, 7} {
+      \draw (\x,-0.15) -- (\x,0.15) node (tick\x) {};
+  };
+  \matrix[anchor=south west] at (-0.5,0.5){
+    \node {CPU3}; & & & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!5] (arr3) {}; \\
     \node {CPU2}; & & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!10] (arr2) {}; & \\
     \node {CPU1}; & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!15] (arr1) {}; & & \\
-};
+  };
 
-\draw[->] (arr1.east) -- (arr2.west);
-\draw[->] (arr2.east) -- (arr3.west);
-
+  \draw[->] (arr1.east) -- (arr2.west);
+  \draw[->] (arr2.east) -- (arr3.west);
 \end{tikzpicture}
-
+\end{center}
 \end{frame}
 
-\begin{frame}[fragile]{Квотированная симуляция}
+\begin{frame}[fragile]{Temporal Decoupling --- Simulated Time}
+\begin{center}
 \begin{tikzpicture}[>=latex]
-\draw[->] (0,0) -- (8,0) node[pos=0.9, below] (sim-time) {Физическое время};
+  \draw[->] (0,0) -- (8,0) node[pos=1, below, align=center] (sim-time) {Simulated\\Time};
 
-\foreach \x in { 1, 2, 3, 4, 5, 6, 7} {
-    \draw (\x,-0.15) -- (\x,0.15) node (tick\x) {};
-};
-\matrix[anchor=south west] at (-0.5,0.5){
-    \node[] {CPU3}; & & & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!5] (arr3) {}; \\
-    \node {CPU2}; & & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!10] (arr2) {}; & \\
-    \node {CPU1}; & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!15] (arr1) {}; & & \\
-};
-
-\draw[->] (arr1.east) -- (arr2.west);
-\draw[->] (arr2.east) -- (arr3.west);
-
+  \foreach \x in { 1, 2, 3, 4, 5, 6, 7} {
+      \draw (\x,-0.15) -- (\x,0.15) node (tick\x) {};
+  };
+  \matrix[anchor=south west] at (-0.5,0.5){
+    \node {CPU3}; & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!5] (arr3) {};  \\
+    \node {CPU2}; & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!10] (arr2) {}; \\
+    \node {CPU1}; & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!15] (arr1) {}; \\
+  };
 \end{tikzpicture}
-
+\end{center}
 \end{frame}
 
-\begin{frame}[fragile]{Квотированная симуляция}
-
-    \begin{tikzpicture}[>=latex]
-        \draw[->] (0,0) -- (8,0) node[pos=0.9, below] (sim-time) {Симулируемое время};
-
-    \foreach \x in { 1, 2, 3, 4, 5, 6, 7} {
-        \draw (\x,-0.15) -- (\x,0.15) node (tick\x) {};
-    };
-    \matrix[anchor=south west] at (-0.5,0.5){
-        \node {CPU3}; & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!5] (arr3) {};  \\
-        \node {CPU2}; & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!10] (arr2) {}; \\
-        \node {CPU1}; & \node[shape=single arrow, draw, text width = 2cm, inner xsep = 0cm, fill=black!15] (arr1) {}; \\
-    };
-
-    % \draw[->] (arr1.east) -- (arr2.west);
-    % \draw[->] (arr2.east) -- (arr3.west);
-
-    \end{tikzpicture}
-
-\end{frame}
-
-\begin{frame}{Размер квоты}
+\begin{frame}{Quantum (Quota)}
+Quantum (Quota) --- how many instructions a guest processor can run before
+giving control back to the simulator.
+\vfill
 \begin{itemize}
-\item  Процессор может исполнить меньше инструкций, чем содержится в выданной ему квоте.
-\item Не следует увлекаться излишне большими квотами, пытаясь ускорить исполнение.
-\item В DES-модели могут быть реализованы псевдо-события, обработка которых вызывает переключение текущего процессора.
+\item A processor can run fewer instruction than dedicated by the quota.
+\item Too big quota can cause unexpected behavior.
+\item In a DES-based simulator pseudo-events can be used to cause guest
+ processor switch.
 \end{itemize}
-
 \end{frame}
 
-\begin{frame}{Совместная симуляция DES и исполняющей модели}
-\centering
-    \begin{tikzpicture}[>=latex, font=\scriptsize]
-
-    \draw[->] (-0.5,0) -- (10.5,0); % node[pos=0.9, above] (sim-time) {Время};
-
-    \begin{scope}
-    \clip (0,-2) rectangle (10, 2.5);
-    \foreach \x in { 1, 2, 3, 4, 5, 6, 7, 8, 9} {
-        \draw (\x,-0.15) -- (\x,0.15) node (tick\x) {};
-    };
-
-    \node[shape=dart, draw, shape border rotate=270 ] at (1, 0.5) (event1) {};
-    \node[shape=dart, draw, shape border rotate=270 ] at (5, 0.5) (event2) {};
-    \node[shape=dart, draw, shape border rotate=270 ] at (9, 0.5) (event3) {};
-
-    \node[above of=event2] (desalabel) {Дискретные события};
-    \draw[->] (desalabel) -- (event1);
-    \draw[->] (desalabel) -- (event2);
-    \draw[->] (desalabel) -- (event3);
-
-    \draw (3,-0.5) ellipse[x radius = 2cm, y radius = 0.5cm] node {Исполнение процессора} ;
-    \draw (7,-0.5) ellipse[x radius = 2cm, y radius = 0.5cm] node {Исполнение процессора} ;
-
-    \draw (-1,-0.5) ellipse[x radius = 2cm, y radius = 0.5cm] node {} ;
-    \draw (11,-0.5) ellipse[x radius = 2cm, y radius = 0.5cm] node {} ;
-    \end{scope}
-    \end{tikzpicture}
-
-\end{frame}
-
-\begin{frame}{Косимуляция}
-
-\centering
-    \begin{tikzpicture}[>=latex]
-    \node[draw, circle, text width = 3cm, text badly centered] (dessim) {Симулятор дискретных событий};
-    \node[draw, circle, text width = 3cm, text badly centered, right = 2.5cm of dessim] (execsim) {Модель исполняющего устройства};
-
-    \draw (dessim.45)   edge[bend left = 45, ->] (execsim.135);
-    \node[above=1cm of execsim.135] {\small Длительность до следующего события};
-    \draw (execsim.225) edge[->, bend left = 45] (dessim.315);
-    \node[below=1cm of dessim.315] {\small Число исполненных шагов};
-
-    \end{tikzpicture}
-
-\end{frame}
-
-\section{Практический пример}
-
-\begin{frame}[fragile]{Пример на модели \texttt{viper-busybox.simics}}
-Квота на восьмиядерной конфигурации:
-\begin{verbatim}
+\begin{frame}[fragile]{Example \No3: \texttt{qsp-clear-linux.simics}}
+Quantum on 8 core system:
+\begin{lstlisting}[mathescape=true,keywordstyle=\ttfamily]
 simics> cpu-switch-time
-Current time quantum:     0.0001 s
-  200000.0  viper.mb.cpu0.core[0][0]
-  200000.0  viper.mb.cpu0.core[0][1]
-  200000.0  viper.mb.cpu0.core[1][0]
-  200000.0  viper.mb.cpu0.core[1][1]
-  200000.0  viper.mb.cpu0.core[2][0]
-  200000.0  viper.mb.cpu0.core[2][1]
-  200000.0  viper.mb.cpu0.core[3][0]
-  200000.0  viper.mb.cpu0.core[3][1]
+Current time quantum: 100.0 $\mu$s
++--------------+------------------------+
+|Cycles/quantum|         Clock          |
++--------------+------------------------+
+|     200000.00|board.mb.cpu0.core[0][0]|
+|     200000.00|board.mb.cpu0.core[0][1]|
+|     200000.00|board.mb.cpu0.core[1][0]|
+|     200000.00|board.mb.cpu0.core[1][1]|
+|     200000.00|board.mb.cpu0.core[2][0]|
+|     200000.00|board.mb.cpu0.core[2][1]|
+|     200000.00|board.mb.cpu0.core[3][0]|
+|     200000.00|board.mb.cpu0.core[3][1]|
++--------------+------------------------+
 Default time quantum not set yet
-\end{verbatim}
-
+\end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile]{Пример на модели \texttt{viper-busybox.simics}}
-Симулируемое время на восьмиядерной конфигурации:
+\begin{frame}[fragile]{Example \No4: \texttt{qsp-clear-linux.simics}}
+Simulated time on 8 core system:
 \begin{verbatim}
 simics> ptime -all
-processor                      steps      cycles  time [s]
-viper.mb.cpu0.core[0][0]  4602030000  5134030000     2.567
-viper.mb.cpu0.core[0][1]  4925600000  5134000000     2.567
-viper.mb.cpu0.core[1][0]  4925600000  5134000000     2.567
-viper.mb.cpu0.core[1][1]  4925600000  5134000000     2.567
-viper.mb.cpu0.core[2][0]  4925600000  5134000000     2.567
-viper.mb.cpu0.core[2][1]  4925600000  5134000000     2.567
-viper.mb.cpu0.core[3][0]  4925600000  5134000000     2.567
-viper.mb.cpu0.core[3][1]  4925600000  5134000000     2.567
++------------------------+----------+------------+--------+
+|       Processor        |  Steps   |   Cycles   |Time (s)|
++------------------------+----------+------------+--------+
+|board.mb.cpu0.core[0][0]|1376450747|107696800000|  53.848|
+|board.mb.cpu0.core[0][1]| 746604719|107696600220|  53.848|
+|board.mb.cpu0.core[1][0]| 746604647|107696600000|  53.848|
+|board.mb.cpu0.core[1][1]| 746604686|107696600000|  53.848|
+|board.mb.cpu0.core[2][0]| 746604725|107696600000|  53.848|
+|board.mb.cpu0.core[2][1]| 746604764|107696600000|  53.848|
+|board.mb.cpu0.core[3][0]| 746604803|107696600000|  53.848|
+|board.mb.cpu0.core[3][1]| 746604842|107696600000|  53.848|
++------------------------+----------+------------+--------+
 \end{verbatim}
-
 \end{frame}
 
-\section{Заключение}
-\begin{frame}{Дополнительные вопросы DES}
+\section*{Conclusions}
+
+\begin{frame}{Conclusions}
 \begin{itemize}
-    \item Совместная работа с моделью процессора.
-    \item Работа с несколькими процессорами сразу.
-    \item Сценарии, когда действительно надо моделировать каждый такт.
+\item Simulation with a fixed step.
+\item Event-driven simulation.
+\item Discrete Event Simulation:
+  \begin{itemize}
+  \item Event creation.
+  \item Event handling.
+  \item Event destruction.
+  \end{itemize}
+\item Co-simulation for executing and non-executing devices.
+\item Multi-processor simulation:
+  \begin{itemize}
+    \item Temporal Decoupling.
+    \item Time quantum.
+  \end{itemize}
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Статьи для перевода}
-\url{https://github.com/yulyugin/ilab-simics/wiki/translation-list}
-\begin{itemize}
-    \item План статьи (описание всех секций).
-    \item Минимум 10000 символов.
-    \item Дедлайн — 31 декабря 2014 г.
-\end{itemize}
-\end{frame}
-
-\section{Литература}
-
-\begin{frame}[allowframebreaks]{Литература}
+\begin{frame}[allowframebreaks]{Bibliography}
 \begin{thebibliography}{99}
-    \bibitem{patterson} Паттерсон Д., Хеннесси Дж. Архитектура компьютеров и проектирование компьютерных систем — СПб.: Питер — 2011 — 784~с. — ISBN 978-5-459-00291-1
-    \bibitem{sim-handbook} Handbook of Simulation. Principles, Methodology, Advances, Applications, and Practice / ed. by J. Banks. — John Wiley \& Sons, Inc., 1998. — ISBN 0-471-13403-1. — \url{http://books.google.com/books?id=dMZ1Zj3TBgAC} % http://lib.mipt.ru/book/288185/
-    \bibitem{simics-processor-integration} Wind River. Simics Processor Integration Guide.
+  \bibitem{} \textit{John Wiley \& Sons, Inc., ed. by J. Banks}. Handbook of
+    Simulation. Principles, Methodology, Advances, Applications, and Practice.
+  \bibitem{} \textit{J.~Engblom}. Temporal Decoupling - Are “Fast” and
+    “Correct” Mutually Exclusive?
 \end{thebibliography}
 \end{frame}
 
-\section{Конец}
-% The final "thank you" frame
-\begin{frame}
-
-{\huge{Спасибо за внимание!}\par}
-
-\vfill
-
-Слайды и материалы курса доступны по адресу \url{http://is.gd/ivuboc} % http://atakua.doesntexist.org/wordpress/simulation-course-russian/
-
-\vfill
-
-\tiny{\textit{Замечание}: все торговые марки и логотипы, использованные в данном материале, являются собственностью их владельцев. Представленная точка зрения отражает личное мнение автора.
-Материалы доступны по лицензии Creative Commons Attribution-ShareAlike (Атрибуция — С сохранением условий) 4.0 весь мир (в т.ч. Россия и др.). Чтобы ознакомиться с экземпляром этой лицензии, посетите \url{http://creativecommons.org/licenses/by-sa/4.0/}
-}
-
-\end{frame}
-
+\finalslide
 
 \end{document}
