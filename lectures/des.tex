@@ -190,16 +190,18 @@ No modeling for externally invisible actions.
 
 \begin{frame}[fragile]{Discrete Event Simulation}
 \begin{lstlisting}
-struct event_t {
+typedef struct event {
     time_t delta;
     dev_t *device;
-    (*function)();
-}
-event_t event_queue[100];
-time = 0;
-foreach e in event_queue {
-    e.function(e.device);
-    time +=e.delta;
+    (*function)(dev_t *device);
+} event_t;
+
+event_t *event_queue;
+time_t sim_time = 0;
+for (event_t *e; e != NULL;
+     e = next_event(&event_queue)) {
+    e->function(e->device);
+    sim_time += e->delta;
 }
 \end{lstlisting}
 \end{frame}
@@ -301,17 +303,20 @@ What should happen to the event queue when:
 
 \begin{frame}[fragile]{Discrete Event Simulation Algorithm}
 \begin{lstlisting}
-struct event_t {
+typedef struct event event_t;
+
+struct event {
     time_t delta;
     dev_t *device;
-    (*function)();
-}
+    (*function)(dev_t *device, event_t *queue);
+};
 
-uint64_t sim_time = 0;
-while (! empty(queue)) {
-    sim_time += get_delta(queue);
-    evt_t evt = pop(queue);
-    evt.fn(evt.device, queue);
+event_t *event_queue;
+time_t sim_time = 0;
+while (!empty(&event_queue)) {
+    sim_time += get_delta(&event_queue);
+    evt_t *evt = pop_event(&event_queue);
+    evt->function(evt->device, &event_queue);
 }
 \end{lstlisting}
 \end{frame}
