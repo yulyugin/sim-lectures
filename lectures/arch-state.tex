@@ -4,43 +4,40 @@
 
 \begin{document}
 
-\begin{frame}
-    \maketitle
-\end{frame}
+\startslides
 
-\begin{frame}
-    \tableofcontents
-\end{frame}
-
-\section*{Обзор}
-
-\begin{frame}{На прошлой лекции}
-Интерпретаторы — простой метод создания моделей процессоров
-
-\end{frame}
-
-\begin{frame}{Вопросы}
+\begin{frame}{On the Previous Lecture:}
 \begin{itemize}
-% \item Определите термин «декодирование» \pause
-\item Сколько бит в машинном слове? \pause
-\item Что лучше — MMIO или PIO?\pause
-\item Может ли архитектура быть и не little, и не big-endian?
+\item Full-Platform Simulation:
+  \begin{itemize}
+  \item Timer,
+  \item Delay-Response Communication.
+  \end{itemize}
+\item Discrete Event Simulation (DES).
+\item Co-Simulation: DES And Processor Models.
+\item Multi-Processor Simulation.
 \end{itemize}
 \end{frame}
 
-% «»
+\begin{frame}{Questions}
+\begin{itemize}
+\item Can a processor be simulated using DES?\pause
+\item What is dangerous about too large quantum in a multi-processor model?\pause
+\item It it possible to have two event queues in a single simulation?
+\end{itemize}
+\end{frame}
 
-\begin{frame}{Платформа}
+\begin{frame}{Platform}
 \centering
 \vfill
 \inputpicture{full-platform}
 \vfill
-
 \end{frame}
 
-\section{Регистровый файл}
+\section{Register File}
 
-\begin{frame}{Регистровый файл}
+% TODO: Use RISC-V instead of OpenRISC.
+\begin{frame}{Register File}
 \centering
 \includegraphics[width=0.8\textwidth]{or1k-gprs}
 
@@ -49,61 +46,65 @@
 \tiny{OpenCores. OpenRISC 1000 Architecture Manual rev 1.0}
 \end{frame}
 
-\begin{frame}[fragile]{С-структура}
-\begin{verbatim}
+\begin{frame}[fragile]{C-Structure}
+\begin{lstlisting}
 #include <stdint.h>
+
 #define NO_GPRS 32
 #define NO_SPRS 1024
 #define REG_VR 0
 #define REG_UPR 1
+
 /* ... */
+
 typedef struct cpu {
     uint32_t pc;
     uint32_t gprs[NO_GPRS];
     uint32_t sprs[NO_SPRS];
 } cpu_t;
-\end{verbatim}
-
+\end{lstlisting}
 \end{frame}
 
-\begin{frame}{Хозяйские регистры}
+\begin{frame}{Host Registers}
 \begin{itemize}
-\item Доступ к структуре в памяти медленный
-\item Доступ к хозяйским регистрам быстрее
-\item Разместим гостевые регистры на хозяйских!
-\item \texttt{register cpu_t* cpu __asm__("rbp");}
+\item Access to structure members in memory is slow.
+\item Access to host registers is faster.
+\item Put guest register in host registers.
+\item \texttt{register cpu_t *cpu __asm__("rbp");}
 \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{Хозяйские регистры}
+\begin{frame}{Host Registers}
 \begin{itemize}
-\item Все гостевые регистры могут не поместиться
-\item Есть смысл размещать только самые часто используемые
-\item Потеря переносимости кода
-\item Специализация регистров: PC, SP, FP[0-7]
-\item Мы мешаем работе компилятора: давление на регистры
+\item All guest registers may not fit host registers.
+\item Put the most frequently used guest registers in host registers.
+\item Simulator code becomes non-portable.
+\item Special registers: \texttt{PC, SP, FP[0-7]}.
+\item Interference with compiler: additional register pressure.
 \end{itemize}
 \end{frame}
 
-\section{Ленивое вычисление состояния}
-\begin{frame}{Ленивое вычисление состояния}
-\begin{itemize}
-\item Вообще не вычислять состояние, пока оно не понадобится!
-\item Пример: IA-32 \texttt{EFLAGS}
-\item $flags = f(a, b, op)$ для последней инструкции, влияющей на флаги
-\end{itemize}
+\section{Lazy calculations}
 
+\begin{frame}{Lazy Calculations}
+\begin{itemize}
+\item Do not calculate state of a register until it is needed.
+\item Example: Intel\reg~IA-32 \texttt{EFLAGS} register.
+\item \texttt{flags = f(src1, src2, op)} for the last instruction changing flags.
+\end{itemize}
+\vfill
 \centering
 \includegraphics[width=0.5\textwidth]{lazy-eflags}
 
 \tiny{Yair Lifshitz et al. Zsim: A Fast Architectural Simulator for ISA Design-Space Exploration}
 \end{frame}
 
-\section{Большие массивы}
+\section{Large Arrays}
 
-\begin{frame}[fragile]{Доступ к ОЗУ и большим массивам}
-Просто выделить на куче!
-\begin{verbatim}
+\begin{frame}[fragile]{RAM And Other Large Array Accesses}
+Allocate dynamic memory from the heap.
+\vfill
+\begin{lstlisting}
 uint8_t *buf = (uint8_t *)calloc(BUF_SIZE, 1);
 
 /* read */
@@ -111,41 +112,40 @@ uint8_t val = buf[offset];
 
 /* write */
 buf[offset] = val;
-\end{verbatim}
-\pause
-Что же делать, если, BUF_SIZE $\sim 2^{53}$, а хозяйской памяти в наличии $2^{32}$?
+\end{lstlisting}
+\vfill\pause
+What to do if \texttt{BUF_SIZE} 16GB but host memory is only 4GB?
 \end{frame}
 
-\begin{frame}[fragile]{Ленивое выделение памяти}
-Для непрерывного дипазона адресов хранилище выделяется по мере необходимости кусками фиксированного размера (страницами).
-
-\begin{verbatim}
+\begin{frame}[fragile]{Lazy Memory Allocation}
+For a continuous address range a storage can be allocated on demand in chunks
+of a fixed size (pages).
+\vfill
+\begin{lstlisting}
 page = addr & PAGE_MASK;
 hptr = lookup_hptr(page);
 if (!hptr)
     hptr = allocate_hptr(page);
 assert(hptr);
 haddr = hptr + (addr & PAGE_OFFSET);
-\end{verbatim}
-При недостатке хозяйской памяти «старые» страницы выгружаются на диск.
+\end{lstlisting}
+\vfill
+Swap <<old>> pages out to disk If memory is insufficient
 \end{frame}
 
-\begin{frame}[fragile]{Звучит знакомо?}
+\begin{frame}[fragile]{Does It Sound Familiar?}
 \begin{itemize}
-\item Это же виртуальная память!
-\item POSIX-системы предоставляют механизм mmap()
+\item It's a virtual memory!
+\item POSIX-systems have \texttt{mmap()} mechanism.
 \end{itemize}
-
-\begin{verbatim}
-void *mmap(void *addr, 
-    size_t len, int prot, int flags,
-    int fildes, off_t off); 
-\end{verbatim}
-
+\vfill
+\begin{lstlisting}
+void *mmap(void *addr, size_t len, int prot,
+           int flags, int fildes, off_t off); 
+\end{lstlisting}
+\vfill
 \centering
-
 \begin{tikzpicture}[>=latex, font=\small, node distance=0mm, inner xsep=0pt, text width = 10mm, every node/.style=draw]
-
 \begin{scope}[start chain]
     \node [on chain] (vp0) {};
     \node [on chain] {};
@@ -175,87 +175,89 @@ void *mmap(void *addr,
 \draw[->] (vp4.south) -- (pp4.north);
 \draw[->] (vp5.south) -- (dp1.north);
     
-\node[draw=none, above=0.1cm of vp0.east, text width=4cm, xshift=1cm] {Выделенный блок};
-\node[draw=none, below=0.1cm of pp1.east, text width=4cm, xshift=1cm] {Физические страницы};
-\node[draw=none, below=0.1cm of dp1.east, text width=4cm, xshift=1cm] {Дисковый своп};
-
-
+\node[draw=none, above=0.1cm of vp0.east, text width=4cm, xshift=1cm] {Allocated Block};
+\node[draw=none, below=0.1cm of pp1.east, text width=4cm, xshift=1cm] {Physical Pages};
+\node[draw=none, below=0.1cm of dp1.east, text width=4cm, xshift=1cm] {Disk Swap};
 \end{tikzpicture}
-
 \end{frame}
 
-\section{Регистры, поля, банки}
+\section{Register, Fields, Banks}
 
-\begin{frame}[fragile]{Два способа взаимодействия с регистрами устройств}
-PIO — programmable I/O, выделенные инструкции для общения с периферией (IA-32, IBM s390, PDP-8)
-
+\begin{frame}[fragile]{Two Ways to Interact With Platform Registers}
+\begin{enumerate}
+\item
+Programmable I/O (PIO) --- specific processor instructions to communicate with
+peripheral devices (Intel\reg~IA-32, IBM s390, PDP-8).
+\vfill
 \begin{verbatim}
 IN EAX, DX
 OUT DX, EAX
 \end{verbatim}
-\pause
-
-MMIO — memory mapped I/O, унифицированный подход к доступу к ОЗУ и устройствам (IA-32, ARM, PDP-11)
-
+\vfill\pause
+\item
+Memory mapped I/O (MMIO) --- unified approach to access RAM and devices
+(Intel\reg~IA-32, ADM, PDP-11).
+\vfill
 \begin{verbatim}
 MOV [mem], reg
 MOV reg, [mem]
 \end{verbatim}
-
+\end{enumerate}
 \end{frame}
 
-\begin{frame}{Операции над регистрами}
+\begin{frame}{Operations on Registers}
 \begin{itemize}
-\item read, write, fetch, prefetch
-\item Регистры-хранилище и регистры с побочными эффектами
-\item Примеры регистров с side-effects: time stamp (RW), command (W), status (R), version (RO)
-\item inquiry — «призрачное» обращение (без эффектов)
-\item reset
+\item Read, write, fetch, prefetch.
+\item Storage (<<dummy>>) registers and registers with side-effects.
+\item Types of register accesses:
+\begin{itemize}
+\item Read-Write (RW) --- control and status registers,
+\item Write (WO) --- command registers,
+\item Read (R) --- info registers,
+\item Inquiry --- <<invisible>> non-architectural access without side effects,
+\item Reset.
 \end{itemize}
-
+\end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{Операции над регистрами}
-\begin{verbatim}
+\begin{frame}[fragile]{Operations on Registers}
+\begin{lstlisting}[basicstyle=\small]
 template <class rtype> class IRegister {
-  virtual Exception Read(rtype& retval) = 0;
-  virtual Exception Fetch(rtype& retval) = 0;
-  virtual Exception Prefetch(rtype& retval) = 0;
-  virtual Exception Write(const rtype& newval) = 0;
-  virtual bool InquiryRead(rtype& retval) = 0;
-  virtual bool InquiryWrite(const rtype& newval) = 0;
-  virtual void Reset() = 0;
-}
-\end{verbatim}
+    virtual Exception Read(rtype& retval) = 0;
+    virtual Exception Fetch(rtype& retval) = 0;
+    virtual Exception Prefetch(rtype& retval) = 0;
+    virtual Exception Write(const rtype& newval) = 0;
+    virtual bool InquiryRead(rtype& retval) = 0;
+    virtual bool InquiryWrite(const rtype& newval) = 0;
+    virtual void Reset() = 0;
+};
+\end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile]{Битовые поля}
-
+\begin{frame}[fragile]{Bit Fields}
+\centering
 \begin{bytefield}[bitwidth=0.8em, endianness=big]{32}
 \bitheader{31,19,18,17,16,15,13,12,11,8,7,0} \\
 \bitbox{13}{}&\bitbox{2}{\tiny{mode}} & \bitbox{1}{\rotatebox{90}{\tiny{mask}}} & \bitbox{3}{} & \bitbox{1}{\rotatebox{90}{\tiny{status}}} & \bitbox{4}{} & \bitbox{8}{vector} \\
 \end{bytefield}
 
-\tiny{APIC LVT Timer. Intel® 64 and IA-32 Architectures Software Developer’s Manual}
-
+\tiny{APIC LVT Timer. Intel\reg 64 and IA-32 Architectures Software Developer’s Manual}
+\vfill
 \normalsize
 \begin{itemize}
-\item Настоящие базовые единицы спецификаций и моделирования
-\item Могут иметь совершенно различные свойства внутри регистра
+\item Real basic unit in specification and simulation.
+\item May have completely different properties in one register.
 \end{itemize}
-
 \end{frame}
 
-\begin{frame}[fragile]{Банк регистров}
-Группа регистров устройства, находящиеся в одной области
+\begin{frame}[fragile]{Register Banks}
+Register Bank --- group of device register located in the same area.
+Can be viewed as hardware equivalent of a software array.
 \vfill
 \centering
-
 \begin{tikzpicture}[font=\small, >=latex]
 
-\node[text height=5cm, text width=1cm, draw]  (physspace) {
-
-};
+\node[text height=5cm, text width=1cm, draw] (physspace) {};
 
 \node[right=of physspace] (bank) {
 \begin{bytefield}[bitwidth=.5em, endianness=big]{32}
@@ -274,49 +276,64 @@ template <class rtype> class IRegister {
 \node[left=0cm of physspace.south west] {\texttt{0xffff}};
 
 \end{tikzpicture}
-
-\end{frame}
-\begin{frame}{Карты памяти}
-\inputpicture{memmap}
-% \begin{itemize}
-% \item 
-% \item 
-% \end{itemize}
 \end{frame}
 
-\begin{frame}{Пример: devmgmt.msc}
+\begin{frame}{Memory Maps}
 \centering
-\includegraphics[width=0.6\textwidth]{devicemanager}
+\inputpicture{memmap}
 \end{frame}
 
-\section{Прерывания}
+\begin{frame}{Example: devmgmt.msc}
+\centering
+\includegraphics[width=0.8\textwidth]{devicemanager}
+\end{frame}
 
-\begin{frame}{Прерывания}
-\begin{centering}
-\inputpicture{interrupt-line}
-\end{centering}
+\section{Address Translation}
 
+\begin{frame}{Address Translation}
 \begin{itemize}
-\item Как моделировать отдельное прерывание — очень просто:\\
-\texttt{take_interrupt(dev_t *dev);}
-\item Когда моделировать — вопрос сложнее, тема отдельной лекции
+\item Real system: \textbf{virtual} to \textbf{physical}.
+\item[] \pause
+\item Simulated system: \textbf{guest virtual} to \textbf{guest physical}.\pause
+\item Simulator: \textbf{guest physical} to \textbf{host virtual}.\pause
+\item Host OS: \textbf{host virtual} to \textbf{host physical}.\pause
 \end{itemize}
-
 \end{frame}
 
-\begin{frame}{Преобразование адресов}
+\begin{frame}{Optimization for Address Translation}
 \begin{itemize}
-\item v2p
-\item p2h
-\item v2p + p2h =  v2h
-% \item softTLB
+\item \texttt{gv2gp + gp2hv + hv2hp}.\pause
+\item Caching on all levels:
+\begin{itemize}
+\item \texttt{hv2hp} caching is done by host TLB.
+\item Other are handled by software TLB-like cache.\pause
+\end{itemize}
+\item More?\pause
+\item \texttt{gv2gp + gp2hv + hv2hp = gv2hv + hv2hp}.
+\item \texttt{gv2hv} often referred as \texttt{v2h}. Cache \texttt{v2h}.\pause
+\item More?\pause
+\item Cache \texttt{gv2hp} --- hardware virtualization.
 \end{itemize}
 \end{frame}
 
 \section{Endianness}
 
-\begin{frame}{Порядок байт при доступах}
+\begin{frame}{Bit, Byte, Word}
+\begin{itemize}
+\item Bit (binary digital) \pause --- the most basic unit of information.
+  Bit represents logical state with two possible values: usually '1'/'0' or
+  'true'/'false'.
+\item Byte \pause --- smallest addressable unit of memory in a particular
+  architecture.\pause
+\item Octet \pause --- a unit of digital information containing 8 bits.\pause
+\item Word (a.k.a. machine word) \pause --- a unit of information that can be
+  handled at once by a particular CPU architecture.
+\end{itemize}
+\pause\vfill
+Intel: byte --- 8 bit, word --- 16 bit, dword --- 32 bit, qword --- 64 bit.
+\end{frame}
 
+\begin{frame}{Endianness --- Order of Bytes}
 \begin{columns}[onlytextwidth]
 \begin{column}{0.5\textwidth}
 \includegraphics[width=\textwidth]{./be}
@@ -326,67 +343,52 @@ template <class rtype> class IRegister {
 \includegraphics[width=\textwidth]{./le}
 \end{column}
 \end{columns}
-
-% \begin{itemize}
-    % \item Порядок от младшего к старшему (\abbr little-endian);
-    % \item Порядок от старшего к младшему (\abbr big-endian);
-% \end{itemize}
-
-    % \item Смешанный порядок (\abbr middle-endian).
-
-
 \end{frame}
 
-\begin{frame}{Бит, байт, слово}
+\begin{frame}{Endianness --- Order of Bytes}
 \begin{itemize}
-\item Бит — кол-во информации, уменьшающее неопределённость в два раза\pause
-\item Байт \pause — минимальная адресуемая (в данной архитектуре) единица хранения
-информации \pause
-\item Октет \pause — восемь бит \pause
-\item Машинное слово \pause — максимальный объём информации, который ЦПУ может обработать единовременно
+\item \textbf{Big-endian (BE)} stores \textit{most} significant byte of a
+  word at the smallest address.
+\item \textbf{Little-endian (LE)} stores \textit{least} significant byte of a
+  word at the smallest address.\pause
+\item \textbf{Middle-endian} or \textbf{mixed-endian} --- numerous other
+  orderings.\pause
+\item \textbf{Bi-endianness} --- architectural feature allowing switchable
+  endianness.
 \end{itemize}
-
-\pause
-Intel: word — 16 бит, dword — 32 бит, qword — 64 бит.
 \end{frame}
 
+\begin{frame}{Endianness --- Examples}
+\begin{itemize}
+\item Big-endian: SPARC, IBM z/Architecture, OpenRISC\dots
+\item Little-endian: Intel\reg IA-32, AMD64, Nios II\dots
+\item Bi-endian: ARM, Power ISA, Intel\reg IA-64, RISC-V\dots
+\end{itemize}
+\end{frame}
 
+\section*{Conclusions}
 
-\section*{Литература}
-
-\begin{frame}[allowframebreaks]{Литература}
+\begin{frame}[allowframebreaks]{Bibliography}
 \begin{thebibliography}{99}
-    \bibitem{bochsunderhood} Stanislav Shwartsman, Darek Mihoka. How Bochs Works Under the Hood. 2nd edition.
-    \url{http://bochs.sourceforge.net/How the Bochs works under the hood 2nd edition.pdf}
-    
-    \bibitem{bic} M. Domeika, M. Loenko, P. Ozhdikhin, E. Brevnov.  Bi-Endian Compiler: A Robust and High Performance Approach for Migrating Byte Order Sensitive Applications.
-    \url{http://world-comp.org/p2011/ESA2902.pdf}
+\bibitem{} \textit{Y. Lifshitz, R. Cohn, I. Livni, O. Tabach, M. Charney, K.
+  Hazelwood}. Zsim: A Fast Architectural Simulator for ISA Design-Space
+  Exploration.
+\bibitem{} \textit{S.~Shwartsman, D.~Mihoka}. How Bochs Works Under the Hood.
+  2nd edition.
+\bibitem{} \textit{M. Domeika, M. Loenko, P. Ozhdikhin, E. Brevnov}. Bi-Endian
+  Compiler: A Robust and High Performance Approach for Migrating Byte Order
+  Sensitive Applications.
 \end{thebibliography}
 \end{frame}
 
-\section*{Конец}
-% The final "thank you" frame 
-
-\begin{frame}{На следующей лекции}
+\begin{frame}{On the Next Lecture:}
 \begin{itemize}
-\item Делаем симулятор, работающий быстрее, чем интерпретатор
-\item Двоичная трансляция
-% \item Двоичная инструментация
+\item Cycle-Accurate Models.
+\item Functions and Ports.
+\item Implementation Details.
 \end{itemize}
 \end{frame}
 
-\begin{frame}
-
-{\huge{Спасибо за внимание!}\par}
-
-\vfill
-
-Слайды и материалы курса доступны по адресу \url{http://is.gd/ivuboc} % http://atakua.doesntexist.org/wordpress/simulation-course-russian/
-
-\vfill
-
-\tiny{\textit{Замечание}: все торговые марки и логотипы, использованные в данном материале, являются собственностью их владельцев. Представленная здесь точка зрения отражает личное мнение автора, не выступающего от лица какой-либо организации.}
-
-\end{frame}
+\finalslide
 
 \end{document}
