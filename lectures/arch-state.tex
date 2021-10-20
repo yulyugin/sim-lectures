@@ -90,7 +90,8 @@ typedef struct cpu {
 \begin{itemize}
 \item Do not calculate state of a register until it is needed.
 \item Example: Intel\reg~IA-32 \texttt{EFLAGS} register.
-\item \texttt{flags = f(src1, src2, op)} for the last instruction changing flags.
+\item \texttt{flags = f(dst, src1, src2, op)} for the last instruction changing
+  flags.
 \end{itemize}
 \vfill
 \centering
