@@ -54,7 +54,6 @@
 #define NO_SPRS 1024
 #define REG_VR 0
 #define REG_UPR 1
-
 /* ... */
 
 typedef struct cpu {
@@ -106,7 +105,7 @@ typedef struct cpu {
 Allocate dynamic memory from the heap.
 \vfill
 \begin{lstlisting}
-uint8_t *buf = (uint8_t *)calloc(BUF_SIZE, 1);
+uint8_t *buf = (uint8_t *)calloc(GUEST_MEM_SIZE, 1);
 
 /* read */
 uint8_t val = buf[offset];
@@ -115,7 +114,7 @@ uint8_t val = buf[offset];
 buf[offset] = val;
 \end{lstlisting}
 \vfill\pause
-What to do if \texttt{BUF_SIZE} 16GB but host memory is only 4GB?
+What to do if \texttt{GUEST_MEM_SIZE} 16GB but host memory is only 4GB?
 \end{frame}
 
 \begin{frame}[fragile]{Lazy Memory Allocation}
@@ -131,7 +130,7 @@ assert(hptr);
 haddr = hptr + (addr & PAGE_OFFSET);
 \end{lstlisting}
 \vfill
-Swap <<old>> pages out to disk If memory is insufficient
+Swap <<old>> pages out to disk if host memory is insufficient.
 \end{frame}
 
 \begin{frame}[fragile]{Does It Sound Familiar?}
@@ -197,7 +196,7 @@ OUT DX, EAX
 \vfill\pause
 \item
 Memory mapped I/O (MMIO) --- unified approach to access RAM and devices
-(Intel\reg~IA-32, ADM, PDP-11).
+(Intel\reg~IA-32, ARM, PDP-11).
 \vfill
 \begin{verbatim}
 MOV [mem], reg
@@ -215,8 +214,8 @@ MOV reg, [mem]
 \item Read-Write (RW) --- control and status registers,
 \item Write (WO) --- command registers,
 \item Read (R) --- info registers,
-\item Inquiry --- <<invisible>> non-architectural access without side effects,
-\item Reset.
+\item Reset,
+\item Inquiry --- <<invisible>> non-architectural access without side effects.
 \end{itemize}
 \end{itemize}
 \end{frame}
@@ -279,6 +278,7 @@ Can be viewed as hardware equivalent of a software array.
 \end{tikzpicture}
 \end{frame}
 
+% TODO: Slides with maps pointing to other maps.
 \begin{frame}{Memory Maps}
 \centering
 \inputpicture{memmap}
@@ -297,7 +297,7 @@ Can be viewed as hardware equivalent of a software array.
 \item[] \pause
 \item Simulated system: \textbf{guest virtual} to \textbf{guest physical}.\pause
 \item Simulator: \textbf{guest physical} to \textbf{host virtual}.\pause
-\item Host OS: \textbf{host virtual} to \textbf{host physical}.\pause
+\item Host OS: \textbf{host virtual} to \textbf{host physical}.
 \end{itemize}
 \end{frame}
 
@@ -325,8 +325,8 @@ Can be viewed as hardware equivalent of a software array.
   Bit represents logical state with two possible values: usually '1'/'0' or
   'true'/'false'.
 \item Byte \pause --- smallest addressable unit of memory in a particular
-  architecture.\pause
-\item Octet \pause --- a unit of digital information containing 8 bits.\pause
+  architecture.
+\item Octet --- a unit of digital information containing 8 bits.\pause
 \item Word (a.k.a. machine word) \pause --- a unit of information that can be
   handled at once by a particular CPU architecture.
 \end{itemize}
