@@ -1,22 +1,30 @@
 \begin{tikzpicture}[>=latex, font=\tiny]
   \node (cpu0) {\small CPU0};
-  \node [fill=green, shape=single arrow, draw, minimum height=10cm, right=0cm of cpu0] {\small Functional model};
+  \node [fill=green, shape=single arrow, draw, minimum height=10cm,
+    right=0cm of cpu0] {\small Functional model};
 
   \node (cpu1) [above=0.5cm of cpu0] {\small CPU1};
-  \node (warm2) [fill=yellow, draw, right=3cm of cpu1, inner xsep = 0cm, outer xsep=0cm] {Warming};
-  \node (cycle2) [fill=red, shape=single arrow, draw, minimum height=2cm, right=0cm of warm2] {Cycle-accurate model};
+  \node (warm2) [fill=yellow, draw, right=3cm of cpu1, inner xsep = 0cm,
+    outer xsep=0cm] {Warming};
+  \node (cycle2) [fill=red, shape=single arrow, draw, minimum height=2cm,
+    right=0cm of warm2] {Cycle-accurate model};
 
   \node (cpu2) [above=0.5cm of cpu1] {\small CPU2};
-  \node (warm1) [fill=yellow, draw, right=2cm of cpu2, align=center, inner xsep=0cm] {Warming};
-  \node (cycle1) [fill=red, shape=single arrow, draw, minimum height=2cm, right=0cm of warm1] {Cycle Accurate Model};
+  \node (warm1) [fill=yellow, draw, right=2cm of cpu2, inner xsep=0cm,
+    outer xsep=0cm] {Warming};
+  \node (cycle1) [fill=red, shape=single arrow, draw, minimum height=2cm,
+    right=0cm of warm1] {Cycle Accurate Model};
 
   \node (cpu3) [above=0.5cm of cpu2] {\small CPU3};
-  \node (warm0) [fill=yellow, draw, right=1cm of cpu3, align=center, inner xsep=0cm] {Warming};
-  \node (cycle0) [fill=red, shape=single arrow, draw, minimum height=2cm, right=0cm of warm0] {Cycle Accurate Model};
+  \node (warm0) [fill=yellow, draw, right=1cm of cpu3, inner xsep=0cm,
+    outer xsep=0cm] {Warming};
+  \node (cycle0) [fill=red, shape=single arrow, draw, minimum height=2cm,
+    right=0cm of warm0] {Cycle Accurate Model};
 
   \draw[->] ([yshift=-0.53cm]warm2.south west) -- (warm2.south west);
   \draw[->] ([yshift=-1.56cm]warm1.south west) -- (warm1.south west);
   \draw[->] ([yshift=-2.59cm]warm0.south west) -- (warm0.south west);
 
-  \node [left=0.5cm of warm0.south west, rotate=90, align=center] {Checkpoint or\\other state transition};
+  \node [left=0.5cm of warm0.south west, rotate=90, align=center]
+        {Checkpoint or\\other state transition};
 \end{tikzpicture}
