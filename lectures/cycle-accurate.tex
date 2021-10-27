@@ -7,17 +7,25 @@
 
 \begin{frame}{On the Previous Lecture:}
 \begin{itemize}
-    \item Модель, управляемая исполнением (функциональная модель)
-    \item Модель, управляемая событиями (DES)\pause
-    \item \textbf{Модель, моделирующая каждый такт} (time-stepped)
+\item Simulation of architectural state:
+  \begin{itemize}
+  \item register file --- fields, banks,
+  \item lazy calculations,
+  \item large arrays --- memory, disk\dots
+  \end{itemize}
+\item Functional full-platform simulation:
+  \begin{itemize}
+  \item Executing devices: interpreter, JIT, direct execution.
+  \item Non-executing devices: discrete event simulation.
+  \end{itemize}
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Questions}
 \begin{itemize}
-\item Сколько бит в машинном слове? \pause
-\item Что лучше — MMIO или PIO?\pause
-\item Может ли архитектура быть и не little, и не big-endian?
+\item How many bits are in a machine word?\pause
+\item What is better MMIO or PIO?\pause
+\item Can an architecture be neither big-endian nor little-endian?\pause
 \end{itemize}
 \end{frame}
 
@@ -147,6 +155,13 @@ Port is a queue with fixed delay.
 \end{frame}
 
 \begin{frame}{On the Next Lecture:}
+\begin{itemize}
+\item Virtualization.
+\item Formal requirements.
+\item Contemporary architectures.
+\item Address translation.
+\item Devices.
+\end{itemize}
 \end{frame}
 
 \finalslide
