@@ -1,0 +1,21 @@
+\begin{tikzpicture}[>=latex]
+  \node[text centered, minimum height=2.5cm, draw, chamfered rectangle,
+    chamfered rectangle corners={north east, south east}] (funcsim) {$F(x)$};
+
+  \node[minimum height=2.5cm, minimum width=1.5cm, draw, chamfered rectangle,
+    chamfered rectangle corners={north east, south east}, right=3cm of funcsim]
+  (execsim) {
+    \begin{tikzpicture}
+      \node[draw, rectangle, fill=white, minimum size=1mm] {
+        \begin{tikzpicture}
+          \draw[|-|] (0,0) -- (0.5,0);
+        \end{tikzpicture}
+        };
+    \end{tikzpicture}
+  };
+
+  \draw (funcsim.65) edge[bend left = 45, ->]
+  node[anchor=south] {Architectural State} (execsim.120);
+  \draw (execsim.240) edge[->, bend left = 45]
+  node[anchor=north] {Delay} (funcsim.300);
+\end{tikzpicture}

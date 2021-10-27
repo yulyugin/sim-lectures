@@ -1,11 +1,11 @@
 \input{../common/config}
-\title{Потактовая симуляция}
+\title{Cycle-Accurate Simulation}
 
 \begin{document}
 
 \startslides
 
-\begin{frame}{На прошлой лекции}
+\begin{frame}{On the Previous Lecture:}
 \begin{itemize}
     \item Модель, управляемая исполнением (функциональная модель)
     \item Модель, управляемая событиями (DES)\pause
@@ -21,150 +21,132 @@
 \end{itemize}
 \end{frame}
 
-\section{Потактовая модель}
+\section{Cycle-Accurate Models}
 
-\begin{frame}{Что моделируем}
+\begin{frame}{Simulated System}
 \centering
-
 \includegraphics[width=\textwidth]{./mips-arch}
 
 \tiny{\url{http://commons.wikimedia.org/wiki/File:MIPS_Architecture_(Pipelined).svg}}
 \end{frame}
 
-\begin{frame}{Проблемы}
+\begin{frame}{Problems}
 \begin{itemize}
-    \item Функциональная модель — не работает (слишком грубая)
-    \item DES — применима, но неудобная абстракция
+\item Functional models --- not applicable (too approximate).
+\item DES --- applicable but not representative abstraction.
 \end{itemize}
-
+\vfill
+\centering
 \inputpicture{des-long}
-
 \end{frame}
 
-\begin{frame}{Особенности}
-
+\begin{frame}{Properties}
+\centering
 \inputpicture{features}
 \end{frame}
 
-\begin{frame}{Проблемы}
+\begin{frame}{Problems}
 \begin{itemize}
-\item Длительность одной операции у разных узлов могут быть различными
-\item Как проверять готовность «медленных» узлов?
-\item Результаты обработки данных должны появляться не ранее, чем на такте, следующим за текущим
-% \item Нельзя в произвольном порядке обновлять состояние блоков
+\item The same operation may have different duration for different nodes.
+\item How to check readiness for <<slow>> nodes?
+\item Results should not be availalbe before the next cycle.
 \end{itemize}
-
 \end{frame}
 
-\section{Функции и порты}
+\section{Functions And Ports}
 
-\begin{frame}{Решение}
-Отделим:
-    \begin{itemize}
-    \item Функции узлов
-    \item Время, затрачиваемое на их выполнение
-    \item Внутреннее состояние узлов
-    \end{itemize}
+\begin{frame}{Solution --- Functions And Ports}
+Split:
+\begin{itemize}
+\item Node functions.
+\item Time to complete the functions.
+\item Internal state of nodea.
+\end{itemize}
 \end{frame}
 
-\begin{frame}{Функциональный элемент}
-Результат готов «мгновенно» при наличии входных данных
-
+\begin{frame}{Function}
+The results is ready <<immediatelly>> if input data is available.
 \vfill
 \centering
 \inputpicture{pure-function}
-
 \end{frame}
 
-\begin{frame}{Порт}
-Очередь фиксированной задержки
-
-Ширина $N$ бит, задержка 1 такт
-
+\begin{frame}{Port}
+Port is a queue with fixed delay.
 \vfill
 \centering
 \inputpicture{delay-line}
-
 \end{frame}
 
-\begin{frame}{Правило соединения}
-
+\begin{frame}{Connection Rules}
 \begin{itemize}
-\item Функции не могут соединяться непосредственно друг с другом
-\item Чередующиеся фазы симуляции:
-\begin{enumerate}
-    \item симуляция функций;
-    \item симуляция передачи результатов
-\end{enumerate}
+\item Functions cannot be connected directly to each other.
+\item Simulation phases alterate:
+  \begin{enumerate}
+  \item Function simualtion;
+  \item Result transfer simulation.
+  \end{enumerate}
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Модель с портами: фаза 1}
-
+\begin{frame}{Simulation: Phase 1 --- Fuctions}
 \centering
 \inputpicture{cycle-phase1}
-
 \end{frame}
 
-\begin{frame}{Модель с портами: фаза 2}
-
+\begin{frame}{Simulation: Phase 2 --- Ports}
 \centering
 \inputpicture{cycle-phase2}
-
 \end{frame}
 
+\section{Implementation Details}
 
-\section{Детали реализации}
-
-\begin{frame}{Готовность данных}
-
+\begin{frame}{Data Readiness}
 \centering
 \inputpicture{valid}
-
 \end{frame}
 
-\begin{frame}{Могут ли функциональные элементы иметь память?}
-
+\begin{frame}{State Of a Functional Element}
 \centering
 \inputpicture{state-storing}
-
 \end{frame}
 
-\begin{frame}{Композиция узлов}
-
+\begin{frame}{Node Composition}
 \centering
 \inputpicture{ports-compose}
-
 \end{frame}
 
-\begin{frame}{Связь функциональной и потактовой моделей}
-
-\centering\includegraphics[width=0.8\textwidth]{functional-cycle-precise-connection}
-
+\begin{frame}{Approxiumate Timing}
+\centering
+\inputpicture{functional-cycle-accurate-connection}
 \end{frame}
 
-% \begin{frame}{Диаграмма моделируемой системы}
-% 
-% \end{frame}
+\begin{frame}{Full Speed Ahead}
+\centering
+\inputpicture{full-speed-ahead}
+\end{frame}
 
+\section*{Conclusions}
 
-\begin{frame}[allowframebreaks]{Литература}
+\begin{frame}[allowframebreaks]{Bibliography}
 \begin{thebibliography}{99}
-    \bibitem{patterson-hennessy} Дэвид Паттерсон и Джон Хэннесси. Архитектура компьютера и проектирование компьютерных
-систем. 4-е изд. Питер, 2012.
-
-\bibitem{Asim} Joel Emer, Pritpal Ahuja, Eric Borch, Artur Klauser, Chi-Keung Luk, Srilatha Manne, Shubhendu S. Mukherjee,
-Harish Patil, Steven Wallace, Nathan Binkert, Roger Espasa, Toni Juan. Asim: A Performance Model Framework // Computer 35 (2002), p. 68–76.
-
-\bibitem{baida} Ю.В. Байда. Методы разработки и тестирования аппаратных потактовых моделей микропроцессоров на программируемых логических интегральных схемах. Дисс. к.т.н. — 2013
+\bibitem{} \textit{M.~Pellauer, M.~Vijayaraghavan, M.~Adler, Arvind, J.~Emer},
+  A-Ports: an efficient abstraction for cycle-accurate performance models on
+  FPGAs.
+\bibitem{} \textit{J.~Emer, P.~Ahuja, E.~Borch, A.~Klauser, C.~Luk,
+  S~.Manne, S.~Mukherjee, H.~Patil, S~.Wallace, N.~Binkert, R.~Espasa, T.~Juan},
+  Asim: A Performance Model Framework.
+\bibitem{} \textit{John L. Hennessy, David A. Patterson},
+  Computer Architecture: A Quantitative Approach.
+\bibitem{} \textit{A.~Sandberg, N.~Nikoleris, T.~E.~Carlson, E.~Hagersten,
+  S.~Kaxiras and D.~Black-Schaffer}, Full Speed Ahead: Detailed Architectural
+  Simulation at Near-Native Speed.
+\bibitem{} \textit{B.~Borgstr\"{o}m, A.~Sembrant, D.~Black-Schaffer}, Adaptive
+  cache warming for faster simulations.
 \end{thebibliography}
 \end{frame}
 
-\begin{frame}{На следующей лекции}
-\centering
-
-Параллельная симуляция, управляемая исполнением (MPonMP)
-
+\begin{frame}{On the Next Lecture:}
 \end{frame}
 
 \finalslide
