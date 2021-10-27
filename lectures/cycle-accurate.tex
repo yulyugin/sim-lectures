@@ -57,7 +57,7 @@
 \begin{itemize}
 \item The same operation may have different duration for different nodes.
 \item How to check readiness for <<slow>> nodes?
-\item Results should not be availalbe before the next cycle.
+\item Results should not be available before the next cycle.
 \end{itemize}
 \end{frame}
 
@@ -68,7 +68,7 @@ Split:
 \begin{itemize}
 \item Node functions.
 \item Time to complete the functions.
-\item Internal state of nodea.
+\item Internal state of node.
 \end{itemize}
 \end{frame}
 
@@ -89,15 +89,15 @@ Port is a queue with fixed delay.
 \begin{frame}{Connection Rules}
 \begin{itemize}
 \item Functions cannot be connected directly to each other.
-\item Simulation phases alterate:
+\item Simulation phases alternate:
   \begin{enumerate}
-  \item Function simualtion;
+  \item Function simulation;
   \item Result transfer simulation.
   \end{enumerate}
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Simulation: Phase 1 --- Fuctions}
+\begin{frame}{Simulation: Phase 1 --- Functions}
 \centering
 \inputpicture{cycle-phase1}
 \end{frame}
@@ -124,7 +124,7 @@ Port is a queue with fixed delay.
 \inputpicture{ports-compose}
 \end{frame}
 
-\begin{frame}{Approxiumate Timing}
+\begin{frame}{Approximate Timing}
 \centering
 \inputpicture{functional-cycle-accurate-connection}
 \end{frame}
