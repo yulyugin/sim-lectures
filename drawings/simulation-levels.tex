@@ -13,11 +13,11 @@
     \draw (A) -- ($(A)!5/6!(C)$);
     \draw (B) -- ($(B)!5/6!(C)$);
     \draw ($(A)!5/6!(C)$) -- ($(B)!5/6!(C)$);
-        \foreach \y/\A/\S in {0/{Логические элементы}/{RTL-модели},
-                            1/Микроархитектура/{Потактовые симуляторы},
-                            2/Инструкции/{Функциональные симуляторы},
-                            3/API/{Симуляторы уровня приложения},
-                            4/Поведение/{Аналитические методы}
+        \foreach \y/\A/\S in {0/{Logical elements}/{RTL-models},
+                            1/Microarchitecture/{Cycle-accurate simulators},
+                            2/ISA/{Functional simulators},
+                            3/API/{User-level simulators},
+                            4/Behavior/{Analytical methods}
                             } {
             \draw ($(A)!\y/6!(C)$) -- ($(B)!\y/6!(C)$)
             node[midway,above] {\small\A}

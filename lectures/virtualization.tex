@@ -7,110 +7,177 @@
 
 \begin{frame}{On the Previous Lecture:}
 \begin{itemize}
-\item Симуляция —  моделирование системы через имитацию внешне видимых эффектов, возникающих при взаимодействии с ней
-\item Эмуляция — моделирование системы через имитацию внутренней структуры и процессов, происходящих внутри её подсистем
-\item Виртуализация — обеспечение эффективной изоляции нескольких систем друг от друга при одновременном и прозрачном доступе к ресурсам нижележащей системы
+\item \textbf{Simulation}\pause --- replication of system's behavior that can
+  be observed through \textbf{\textit{external}} interaction with the system.
+\item \textbf{Emulation}\pause --- replication of a system's behavior
+  considering how the system \textbf{\textit{internally}} works through
+  imitation of all internal structures and processes.
+\item \textbf{Virtualization}\pause --- effective isolation of several systems
+  from each other with simultaneous and transparent access to resources of the
+  underlying system.
 \end{itemize}
-
 \end{frame}
 
-\begin{frame}{Связь виртуализации и симуляции}
-
+\begin{frame}{Simulation vs. Virtualization}
 \centering
 \inputpicture{simulation-levels}
-
 \vfill
-
 \inputpicture{multiplexing}
-
 \end{frame}
 
-\begin{frame}{История}
+\begin{frame}{History}
 \begin{itemize}
-\item IBM VM — 1960 гг. \cite{goldberg}
-\item VMware Workstation — 1998 г.
-\item Intel VT-x, VT-i — 2005 г.
-% \item 
+\item IBM VM --- 1960.
+\item VMware Workstation --- 1998.
+\item Intel\reg~VT-x --- 2005.
 \end{itemize}
-
-
 \end{frame}
 
-\section{Классические условия виртуализации}
+\section{Formal Requirements}
 
-\begin{frame}{Необходимые свойства}
+\subsection{Virtual Machine Concept}
 
+\begin{frame}{Definition}
+Gerald J. Popek and Robert P. Goldberg, ``Formal requirements for
+virtualizable third generation architectures''~\cite{goldberg}:
+\vfill\pause
+A \textit{virtual machine} is taken to be an \textbf{efficient},
+\textbf{isolated} \textbf{duplicate} of the real machine.
+\vfill\pause
+\textit{Virtual machine monitor (VMM)} provides:
 \begin{enumerate}
-\item Изоляция — каждая виртуальная машина должна иметь доступ только к тем ресурсам, которые были ей назначены
-\item Эквивалентность — любая программа, исполняемая под управлением ВМ, должна демонстрировать поведение, полностью идентичное реальной системе, за исключением эффектов, связанных с объёмами ресурсов
-\item Эффективность — «статистически преобладающее подмножество инструкций виртуального процессора должно исполняться напрямую хозяйским процессором, без вмешательства монитора ВМ»
+\item an environment for programs equivalent to the original machine;\pause
+\item programs run in this environment show at worst only minor decreases in
+  speed;\pause
+\item the VMM is in complete control of system resources.
 \end{enumerate}
-
 \end{frame}
 
-\subsection{Определения}
-
-\begin{frame}{Модель}
-
+\begin{frame}{Properties}
 \begin{itemize}
-\item Один процессор, исполняющий инструкции
-\item Состояние: (M, P, R)
-\item Два режима M: u и s
-\item Указатель текущей инструкции P
-\item Границы сегмента памяти R (l, b)
-\item Оперативная память: линейная E с ячейками E[n]
-\end{itemize}
-
-\end{frame}
-
-\begin{frame}{События ловушки (trap)}
-\begin{itemize}
-\item Вызванные попыткой изменить состояние
-процессора (потока управления)
-\item Вызванные механизмом защиты памяти (ловушка з.п.)
-
-\item E[0] ← (M1,P1,R1)
-\item (M2,P2,R2) ← E[1]
-\end{itemize}
-
-\end{frame}
-
-\begin{frame}{Инструкции}
-\begin{itemize}
-    \item Привилегированные (privileged). Исполнение с M=u всегда вызывает ловушку потока управления
-    \item Служебные (sensitive)
-    \begin{itemize}
-        \item Инструкции, исполнение которых закончилось без ловушки защиты памяти и вызвало изменение M и/или R
-        \item Инструкции, поведение которых в случаях, когда они не вызывают ловушку защиты памяти, зависит или от режима M, или от значения R
-    \end{itemize}
-    \item Безвредные (innocuous) — не служебные
+\item \textbf{Equivalent} means that any program runnig under the
+  VMM control should demonstrated identical to the original machine behavoir,
+  except differencies caused by the availability of system resources and
+  timing.\pause
+\item \textbf{Efficiency} demands that a statistically dominant subset of the
+  virtual processor's instructions is executed directly by the real processor,
+  with no software intervention by the VMM.\pause
+\item \textbf{Resource control}:
+  \begin{enumerate}
+  \item a program running under VMM cannot access resources not explicitly
+    allocated to it;
+  \item VMM can regain control of already allocated resources.
+  \end{enumerate}
 \end{itemize}
 \end{frame}
 
-\subsection{Достаточное условие}
+\subsection{Model of Machines}
 
-\begin{frame}{Достаточное условие}
+\begin{frame}{Model of Machines}
+\begin{itemize}
+\item Single processor executing instructions.
+\item The processor's state $(E, M, P, R)$:
+  \begin{itemize}
+  \item Linear memory $E$ of size $q$, addressing $E[i]$,
+  \item Two modes $M$: $u$ (user) and $s$ (supervisor),
+  \item Program counter --- $P$,
+  \item Memory segment --- $R (l, b)$.
+  \end{itemize}
+\item Instruction $i(E_1, M_1, P_1, R_1) = (E_2, M_2, P_2, R_2)$.
+\end{itemize}
+\end{frame}
 
-Множество служебных инструкций является подмножеством привилегированных инструкций
+\begin{frame}{Trap}
+An instruction $i$ is trap if:
+\begin{equation*}
+  \begin{aligned}
+  i(E_1, M_1, P_1, R_1) &= (E_2, M_2, P_2, R_2)\text{, where} \\
+  E_2[j] &= E_1[j]\text{, for} 0 < j < q, \\
+  E_2[0] &= (M_1, P_1, R_1), \\
+  (M_2, P_2, R_2) &= E_1[1].
+  \end{aligned}
+\end{equation*}
+\pause\vfill
+Trap types:
+\begin{enumerate}
+\item Control trap --- caused by an attempt to change the processor's state.
+\item Memory trap --- caused by an attampt to access an out of bound address.
+\end{enumerate}
+\end{frame}
 
-\centering
+\begin{frame}{Instructions}
+\begin{itemize}
+\item \textbf{Prigileged}: execution with $M=u$ always causes a
+  control trap.\pause
+\item \textbf{Sensitive}:
+  \begin{itemize}
+  \item \textit{Control} sensitive instructions change $M$ and/or $R$.
+  \item \textit{Behavior} sensitive instructions operates differently depending
+    on $M$ or $R$.\pause
+  \end{itemize}
+  \item \textbf{Innocuous} --- neither privileged nor sensitive.
+\end{itemize}
+\end{frame}
+
+\subsection{Sufficient Conditions for Virtualizability}
+
+\begin{frame}{Sufficient Conditions for Virtualizability}
+A virtual machine monitor may be constructed if the set of sensitive instructions for that computer is a subset of the set of privileged instructions.
+\vfill\centering
 \inputpicture{vm-sufficient-condition} 
 \end{frame}
 
-\begin{frame}{Построение}
-\begin{itemize}
-    \item Программы ВМ исполняют безобидные инструкции напрямую
-    \item Служебные инструкции вызывают ловушку → переход в монитор, который их эмулирует
-    \item Привилегированные инструкции (ОС внутри ВМ) → ловушка
-\end{itemize}
-
-\centering$\Downarrow$
-
+\begin{frame}{Construction}
 \begin{enumerate}
-    \item Изоляция
-    \item Эквивалентность
-    \item Эффективность
+\item VMM operates in supervisor mode.
+\item VMs operate in user mode:
+  \begin{itemize}
+  \item innocuous instructions are executed directly,
+  \item sensitive instructions cause traps and emulation by VMM,
+  \item privileged instructions case traps and emulation by VMM.
+  \end{itemize}
 \end{enumerate}
+\pause
+\centering$\Downarrow$
+\begin{enumerate}
+  \item Isolation,
+  \item Equivalence,
+  \item Efficiency.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Trap and Emulate}
+\centering
+\inputpicture{trap-and-emulate}
+\end{frame}
+
+\section{Types of Hypervisors}
+
+% TODO: Place the next two frame on one slide with vertical split
+\begin{frame}{Types of Hypervisors}
+Type 1 --- bare-metal hypervisor:
+\vfill
+\centering
+\inputpicture{vm-type1}
+\vfill
+\begin{itemize}
+\item Microsoft Hyper-V,
+\item Linux KVM,
+\item VMware ESXi,
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Types of Hypervisors}
+Type 2 --- hosted hypervisor:
+\vfill
+\centering
+\inputpicture{vm-type2}
+\vfill
+\begin{itemize}
+\item Oracle VirtualBox,
+\item VMware Workstation/Fusion,
+\item Parallels Desktop,
+\end{itemize}
 \end{frame}
 
 \section{Современные корректировки}
