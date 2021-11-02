@@ -6,6 +6,23 @@
 \startslides
 
 \begin{frame}{On the Previous Lecture:}
+  \begin{itemize}
+    \item Cycle-accurate simulation.
+    \item Functions and ports.
+    \item Approximate timing.
+    \item Full speed ahead.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Questions}
+  \begin{itemize}
+    \item What phases exist in port-based cycle-accurate model?\pause
+    \item How many independent inputs can a functional element have?\pause
+    \item How many independent inputs can a port have?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Simulation vs. Emulation vs. Virtualization}
 \begin{itemize}
 \item \textbf{Simulation}\pause --- replication of system's behavior that can
   be observed through \textbf{\textit{external}} interaction with the system.
@@ -55,9 +72,9 @@ A \textit{virtual machine} is taken to be an \textbf{efficient},
 
 \begin{frame}{Properties}
 \begin{itemize}
-\item \textbf{Equivalent} means that any program runnig under the
-  VMM control should demonstrated identical to the original machine behavoir,
-  except differencies caused by the availability of system resources and
+\item \textbf{Equivalent} means that any program running under the
+  VMM control should demonstrated identical to the original machine behavior,
+  except differences caused by the availability of system resources and
   timing.\pause
 \item \textbf{Efficiency} demands that a statistically dominant subset of the
   virtual processor's instructions is executed directly by the real processor,
@@ -122,7 +139,9 @@ Trap types:
 \subsection{Sufficient Conditions for Virtualizability}
 
 \begin{frame}{Sufficient Conditions for Virtualizability}
-A virtual machine monitor may be constructed if the set of sensitive instructions for that computer is a subset of the set of privileged instructions.
+A virtual machine monitor may be constructed if the set of sensitive
+instructions for that computer is a subset of the set of privileged
+instructions.
 \vfill\centering
 \inputpicture{vm-sufficient-condition} 
 \end{frame}
@@ -146,174 +165,204 @@ A virtual machine monitor may be constructed if the set of sensitive instruction
 \end{enumerate}
 \end{frame}
 
-\begin{frame}{Trap and Emulate}
-\centering
-\inputpicture{trap-and-emulate}
+\section{Modern Adjustments}
+
+\begin{frame}{What Is Missing?}
+\begin{itemize}
+  \item Complex address translation,
+  \item Peripheral devices,
+\end{itemize}
 \end{frame}
 
-\section{Types of Hypervisors}
+\subsection{Address Translation}
+
+\begin{frame}{Address Translation}
+\centering
+\inputpicture{two-level-translation} 
+\end{frame}
+
+\begin{frame}{TLB for Virtualization}
+\begin{center}
+\begin{tabular}{rrr}
+Virtual address & Physical address & Tag\\
+0x11112222000   &  0x22220000      & VM1\\
+0x11112222000   &  0x11110000      & VM2\\
+0x44443333000   &  0x55554000      & MON\\
+0xabcd9876000   &  0x00001000      & VM1\\
+0xabcd9876000   &  0x11111000      & VM3
+\end{tabular}
+\end{center}
+\end{frame}
+
+\subsection{Peripheral Devices}
+
+\begin{frame}{Peripheral Devices}
+\begin{itemize}
+  \item Whom to deliver?
+  \item What if interrupts are disabled in a VM?
+\end{itemize}
+\vfill
+\centering
+\begin{tikzpicture}[>=latex, font=\small, align=center]
+  \node[draw] (dev) {Device};
+
+  \node[draw, rounded corners, right=2cm of dev, text width=2.2cm] (vmm) {VMM};
+  \node[draw, rounded corners, below = 0.5 cm of vmm, text width=2.2cm] (vm1) {VM 1};
+  \node[draw, rounded corners, below = 0.5cm of vm1, text width=2.2cm] (vm2) {VM 2};
+
+  \node[draw, left=0.5cm of vm1, cloud] (sel) {?};
+
+  \draw[->] (dev) |- (sel);
+  \draw[->] (sel) -- (vmm);
+  \draw[->] (sel) -- (vm1);
+  \draw[->] (sel) -- (vm2);
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Conservative Approach}
+\begin{itemize}
+  \item All interrupts delivered to VMM,
+  \item VMM injects interrupts to VMs,
+  \item Higher intertupt latency.
+\end{itemize}
+\vfill
+\centering
+\begin{tikzpicture}[>=latex, font=\small, align=center]
+  \node[draw] (dev) {Device};
+
+  \node[draw, rounded corners, right=2cm of dev, text width=2.2cm] (vmm) {VMM};
+  \node[draw, rounded corners, below = 0.5 cm of vmm, text width=2.2cm] (vm1) {VM 1};
+  \node[draw, rounded corners, below = 0.5cm of vm1, text width=2.2cm] (vm2) {VM 2};
+
+  \draw[->] (dev) -- (vmm);
+  \draw[->] (vmm) -- (vm1);
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Hardware Support}
+\begin{itemize}
+  \item Hardware delivers permitted interrupts to VM,
+  \item Other interrupts delivered to VMM.
+\end{itemize}
+\vfill
+\centering
+\begin{tikzpicture}[>=latex, font=\small, align=center]
+  \node[draw] (dev) {Device};
+
+  \node[draw, rounded corners, right=2.5cm of dev, text width=2.2cm] (vmm) {VMM};
+  \node[draw, rounded corners, below = 0.5 cm of vmm, text width=2.2cm] (vm1) {VM 1};
+  \node[draw, rounded corners, below = 0.5cm of vm1, text width=2.2cm] (vm2) {VM 2};
+
+  \node[draw, left=1.5cm of vm1, trapezium, shape border rotate=270] (sel) {HW};
+
+  \draw[->] (dev) |- (sel);
+  \draw[->] (sel) -- (vmm.west) node[above, midway, font=\tiny, xshift=-0.25cm] {Other\\interrupts};
+  \draw[->] (sel) -- (vm1) node[below, midway, font=\tiny ] {Permitted\\interrupts};
+\end{tikzpicture}
+\end{frame}
+
+\section{Virtualizability of Existing Processor Architecture}
+
+\begin{frame}{Intel\reg~IA-32 Virtualization Support}
+\begin{itemize}
+\item Original Intel\reg~IA-32 is not vitualizable --- there are sensitive but
+  not privileged instructions.
+\item Intel\reg~VT-x added in 2006:
+  \begin{itemize}
+  \item Two new executing modes --- VMX root and VMX non-root.
+  \item Virtual Machine Control Structure (VMCS).
+  \item New instructions: \texttt{VMENTER}, \texttt{VMXON}, \dots
+  \item Other support for virtualization like extended page-table mechanism
+    (EPT).
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+% TODO: ARM and RISC-V
+
+\section{Hypervisor Design}
 
 % TODO: Place the next two frame on one slide with vertical split
 \begin{frame}{Types of Hypervisors}
 Type 1 --- bare-metal hypervisor:
-\vfill
-\centering
-\inputpicture{vm-type1}
-\vfill
 \begin{itemize}
 \item Microsoft Hyper-V,
 \item Linux KVM,
 \item VMware ESXi,
 \end{itemize}
+\vfill
+\centering
+\inputpicture{vm-type1}
 \end{frame}
 
 \begin{frame}{Types of Hypervisors}
 Type 2 --- hosted hypervisor:
-\vfill
-\centering
-\inputpicture{vm-type2}
-\vfill
 \begin{itemize}
 \item Oracle VirtualBox,
 \item VMware Workstation/Fusion,
 \item Parallels Desktop,
 \end{itemize}
-\end{frame}
-
-\section{Современные корректировки}
-
-\begin{frame}{Что не упомянуто в условии Г. и П.}
-
-\begin{itemize}
-    \item Сложные схемы трансляции адресов
-    \item Периферия
-    \item Многопроцессорные системы
-\end{itemize}
-\end{frame}
-
-\subsection{Трансляция адресов}
-
-\begin{frame}[shrink=20]{Трансляция адресов}
-\centering
-\inputpicture{two-level-translation} 
-\end{frame}
-
-\begin{frame}{Виртуализация TLB}
-\begin{center}
-\begin{tabular}{rrr}
-Виртуальный адрес & Физический адрес & Тэг\\
-0x11112222000 &  0x22220000 & VM1\\
-0x11112222000 &  0x11110000 & VM2\\
-0x44443333000 &  0x55554000 & MON\\
-0xabcd9876000 &  0x00001000 & VM1\\
-0xabcd9876000 &  0x11111000 & VM3
- \end{tabular}
-\end{center}
-\end{frame}
-
-\subsection{Периферийные устройства}
-
-\begin{frame}{Периферийные устройства}
-\begin{itemize}
-    \item Кому доставлять прерывание?
-    \item Что делать, если прерывания внутри ВМ запрещены?
-\end{itemize}
-
 \vfill
 \centering
-\begin{tikzpicture}[>=latex, font=\small, align=center]
-    \node[draw] (dev) {Устройство};
-
-    \node[draw, rounded corners, right=2cm of dev, text width=2.2cm] (vmm) {Монитор ВМ};
-    \node[draw, rounded corners, below = 0.5 cm of vmm, text width=2.2cm] (vm1) {ВМ 1};
-    \node[draw, rounded corners, below = 0.5cm of vm1, text width=2.2cm] (vm2) {ВМ 2};
-
-    \node[draw, left=0.5cm of vm1, cloud] (sel) {?};
-
-    \draw[->] (dev) |- (sel);
-    \draw[->] (sel) -- (vmm);
-    \draw[->] (sel) -- (vm1);
-    \draw[->] (sel) -- (vm2);
-\end{tikzpicture}
-
+\inputpicture{vm-type2}
 \end{frame}
 
-\begin{frame}{Консервативный подход}
-\begin{itemize}
-    \item Все прерывания доставляются монитору
-    \item Монитор «впрыскивает» их в ВМ
-    \item Повышенная задержка доставки прерываний
-\end{itemize}
-
-\vfill
+\begin{frame}{Trap and Emulate}
 \centering
-\begin{tikzpicture}[>=latex, font=\small, align=center]
-    \node[draw] (dev) {Устройство};
-
-    \node[draw, rounded corners, right=2cm of dev, text width=2.2cm] (vmm) {Монитор ВМ};
-    \node[draw, rounded corners, below = 0.5 cm of vmm, text width=2.2cm] (vm1) {ВМ 1};
-    \node[draw, rounded corners, below = 0.5cm of vm1, text width=2.2cm] (vm2) {ВМ 2};
-
-    \draw[->] (dev) -- (vmm);
-    \draw[->] (vmm) -- (vm1);
-\end{tikzpicture}
-
+\inputpicture{trap-and-emulate}
 \end{frame}
 
-\begin{frame}{Аппаратная поддержка}
-Аппаратура обеспечивает доставку выбранных прерываний в текущую ВМ, остальные — в монитор
-
-\vfill
-\centering
-\begin{tikzpicture}[>=latex, font=\small, align=center]
-    \node[draw] (dev) {Устройство};
-
-    \node[draw, rounded corners, right=2.5cm of dev, text width=2.2cm] (vmm) {Монитор ВМ};
-    \node[draw, rounded corners, below = 0.5 cm of vmm, text width=2.2cm] (vm1) {ВМ 1};
-    \node[draw, rounded corners, below = 0.5cm of vm1, text width=2.2cm] (vm2) {В М 2};
-
-    \node[draw, left=1.5cm of vm1, trapezium, shape border rotate=270] (sel) {HW};
-
-    \draw[->] (dev) |- (sel);
-    \draw[->] (sel) -- (vmm.west) node[above, midway, font=\tiny, xshift=-0.25cm] {Остальные\\прерывания};
-    \draw[->] (sel) -- (vm1) node[below, midway, font=\tiny ] {Разрешённые\\прерывания};
-\end{tikzpicture}
-
+\begin{frame}{Trap and Emulate}
+\begin{itemize}
+\item Most of the processor's instructions are executed directly.
+\item Other fall-back to emulation: interpreter, JIT.\pause
+\item Fall-back reasons:
+  \begin{itemize}
+  \item Unsupported instructions,
+  \item Sensitive instructions,
+  \item Faults and exceptions,
+  \item Input/Output operations,
+  \item External interrupts,
+  \item \dots
+  \end{itemize}
+\end{itemize}
 \end{frame}
 
-\subsection{Многопроцессорность}
+\begin{frame}{Vmlatency Demo}
+Vmlatency is a simple VMM used to measure VM-Enter and VM-Exit turnaround time:
 
-\begin{frame}{Многопроцессорность}
-\begin{itemize}
-    \item Планировка исполнения $N$ виртуальных процессоров на $M$ физических, $N \geqslant M$
-    \begin{itemize}
-        \item Справедливая (fair)
-        \item Эффективная — характерные длительности синхронизационных процессов внутри ВМ должны быть близки к наблюдаемым на реальной аппаратуре
-    \end{itemize}
-\end{itemize}
+\url{https://github.com/yulyugin/vmlatency}
+\end{frame}
 
-\begin{itemize}
-    \item Проблема вытеснения потоков, заблокировавших ресурсы (lock holder preemption)
-    \item Монитору необходимо детектировать новый класс гостевых инструкций — синхронизационные примитивы (атомарные инструкции)
-\end{itemize}
+\section*{Conclusions}
 
+\begin{frame}{Conclusions}
+\tableofcontents
 \end{frame}
 
 \begin{frame}[allowframebreaks]{Bibliography}
 \begin{thebibliography}{99}
-\bibitem{goldberg} Popek Gerald J., Goldberg Robert P. Formal requirements for virtualizable third generation architectures // Communications of the ACM. V. 17. \#7. 1974.
-\bibitem{vtx} Leung, F. [et al.] Intel® Virtualization Technology // ITJ Vol 10 Issue 3 — 2006.
-\bibitem{mpr} Harlan McGhan. The gHost in the Machine: Parts 1,2,3 // Microprocessor Report. 2007. \url{http://mpronline.com}
-\bibitem{virt-locks} Jiannan Ouyang and John R. Lange. Preemptable ticket spinlocks: improving consolidated performance in the cloud — 2013 \url{https://labs.vmware.com/vee2013/docs/p191.pdf}
-\bibitem{my-virt} Аппаратная виртуализация. Теория, реальность и поддержка в архитектурах процессоров \url{http://habrahabr.ru/company/intel/blog/196444/}
+\bibitem{goldberg} Popek Gerald J., Goldberg Robert P. Formal requirements for
+  virtualizable third generation architectures // Communications of the ACM.
+  V. 17. \#7. 1974.
+\bibitem{vtx} Leung, F. [et al.] Intel® Virtualization Technology // ITJ Vol
+  10 Issue 3 — 2006.
+\bibitem{} \textit{Keith Adams, Ole Agesen}, A Comparison of Software and
+  Hardware Techniques for x86 Virtualization.
+\bibitem{} \textit{Barham, Paul and Dragovic, Boris and Fraser, Keir and Hand,
+  Steven and Harris, Tim and Ho, Alex and Neugebauer, Rolf and Pratt, Ian and
+  Warfield, Andrew}, Xen and the Art of Virtualization.
 \end{thebibliography}
 \end{frame}
 
-\begin{frame}{На следующей лекции}
-\centering
-
-Паравиртуализация
-
+\begin{frame}{On the Next Lecture:}
+  Paravirtualization:
+  \begin{itemize}
+    \item Isolation against performance.
+    \item Storage.
+    \item{<<Magic>> instructions}.
+    \item Device pass-trough.
+  \end{itemize}
 \end{frame}
 
 \finalslide
