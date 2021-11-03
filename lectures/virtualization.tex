@@ -109,7 +109,7 @@ An instruction $i$ is trap if:
 \begin{equation*}
   \begin{aligned}
   i(E_1, M_1, P_1, R_1) &= (E_2, M_2, P_2, R_2)\text{, where} \\
-  E_2[j] &= E_1[j]\text{, for} 0 < j < q, \\
+  E_2[j] &= E_1[j]\text{, for } 0 < j < q, \\
   E_2[0] &= (M_1, P_1, R_1), \\
   (M_2, P_2, R_2) &= E_1[1].
   \end{aligned}
@@ -168,7 +168,6 @@ instructions.
 \section{Modern Adjustments}
 
 \begin{frame}{What Is Missing?}
-\pause
 \begin{itemize}
   \item Complex address translation,
   \item Peripheral devices,
@@ -238,7 +237,7 @@ Virtual address & Physical address & Tag\\
   \draw[->] (vmm) -- (vm1);
 \end{tikzpicture}
 \begin{itemize}
-  \item Higher intertupt latency.
+  \item Higher interrupt latency.
 \end{itemize}
 \end{frame}
 
@@ -274,7 +273,8 @@ Virtual address & Physical address & Tag\\
   \begin{itemize}
   \item Two new executing modes --- VMX root and VMX non-root.
   \item Virtual Machine Control Structure (VMCS).
-  \item New instructions: \texttt{VMENTER}, \texttt{VMXON}, \dots
+  \item New instructions: \texttt{VMXON}, \texttt{VMWRITE}, \texttt{VMLAUNCH},
+    \dots
   \item Other support for virtualization like extended page-table (EPT)
     mechanism.
   \end{itemize}
