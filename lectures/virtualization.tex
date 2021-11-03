@@ -55,7 +55,7 @@
 \subsection{Virtual Machine Concept}
 
 \begin{frame}{Definition}
-Gerald J. Popek and Robert P. Goldberg, ``Formal requirements for
+\textit{Gerald J. Popek, Robert P. Goldberg}, ``Formal requirements for
 virtualizable third generation architectures''~\cite{goldberg}:
 \vfill\pause
 A \textit{virtual machine} is taken to be an \textbf{efficient},
@@ -129,7 +129,7 @@ Trap types:
 \item \textbf{Sensitive}:
   \begin{itemize}
   \item \textit{Control} sensitive instructions change $M$ and/or $R$.
-  \item \textit{Behavior} sensitive instructions operates differently depending
+  \item \textit{Behavior} sensitive instructions operate differently depending
     on $M$ or $R$.\pause
   \end{itemize}
   \item \textbf{Innocuous} --- neither privileged nor sensitive.
@@ -152,8 +152,8 @@ instructions.
 \item VMs operate in user mode:
   \begin{itemize}
   \item innocuous instructions are executed directly,
-  \item sensitive instructions cause traps and emulation by VMM,
-  \item privileged instructions case traps and emulation by VMM.
+  \item sensitive instructions cause traps and emulation by the VMM,
+  \item privileged instructions cause traps and emulation by the VMM.
   \end{itemize}
 \end{enumerate}
 \pause
@@ -168,6 +168,7 @@ instructions.
 \section{Modern Adjustments}
 
 \begin{frame}{What Is Missing?}
+\pause
 \begin{itemize}
   \item Complex address translation,
   \item Peripheral devices,
@@ -223,7 +224,6 @@ Virtual address & Physical address & Tag\\
 \begin{itemize}
   \item All interrupts delivered to VMM,
   \item VMM injects interrupts to VMs,
-  \item Higher intertupt latency.
 \end{itemize}
 \vfill
 \centering
@@ -237,11 +237,14 @@ Virtual address & Physical address & Tag\\
   \draw[->] (dev) -- (vmm);
   \draw[->] (vmm) -- (vm1);
 \end{tikzpicture}
+\begin{itemize}
+  \item Higher intertupt latency.
+\end{itemize}
 \end{frame}
 
 \begin{frame}{Hardware Support}
 \begin{itemize}
-  \item Hardware delivers permitted interrupts to VM,
+  \item Hardware delivers permitted interrupts to VMs,
   \item Other interrupts delivered to VMM.
 \end{itemize}
 \vfill
@@ -261,7 +264,7 @@ Virtual address & Physical address & Tag\\
 \end{tikzpicture}
 \end{frame}
 
-\section{Virtualizability of Existing Processor Architecture}
+\section{Virtualizability of Existing Processor Architectures}
 
 \begin{frame}{Intel\reg~IA-32 Virtualization Support}
 \begin{itemize}
@@ -272,8 +275,8 @@ Virtual address & Physical address & Tag\\
   \item Two new executing modes --- VMX root and VMX non-root.
   \item Virtual Machine Control Structure (VMCS).
   \item New instructions: \texttt{VMENTER}, \texttt{VMXON}, \dots
-  \item Other support for virtualization like extended page-table mechanism
-    (EPT).
+  \item Other support for virtualization like extended page-table (EPT)
+    mechanism.
   \end{itemize}
 \end{itemize}
 \end{frame}
@@ -327,6 +330,8 @@ Type 2 --- hosted hypervisor:
   \end{itemize}
 \end{itemize}
 \end{frame}
+
+\section{Demo}
 
 \begin{frame}{Vmlatency Demo}
 Vmlatency is a simple VMM used to measure VM-Enter and VM-Exit turnaround time:
