@@ -26,14 +26,16 @@
   \draw[->] (vpage-0-1.east) -- (vpage-1-2.west);
   \draw[->] (vpage-0-2.east) -- (vpage-1-1.west);
   \draw[->] (vpage-0-5.east) -- (vpage-1-0.west);
-  \node[fill=white, rotate=90, text width=2cm, inner sep=0pt] at (1.75, -2.5*0.6) {First address translation level};
+  \node[fill=white, rotate=90, text width=2cm, inner sep=0pt, align=center,
+    font=\tiny] at (1.75, -2.5*0.6) {First level\\address translation};
 
   \draw[->] (vpage-0-10.east) -- (vpage-1-8.west);
   \draw[->] (vpage-0-8.east) -- (vpage-1-10.west);
   \draw[->] (vpage-0-9.east) -- (vpage-1-10.west);
   \draw[->] (vpage-0-10.east) -- (vpage-1-12.west);
   \draw[->] (vpage-0-13.east) -- (vpage-1-13.west);
-  \node[fill=white, rotate=90, text width=2cm, inner sep=0pt] at (1.75, -10.5*0.6) {First address translation level};
+  \node[fill=white, rotate=90, text width=2cm, inner sep=0pt, align=center,
+    font=\tiny] at (1.75, -10.5*0.6) {First level\\address translation};
 
   \draw[->] (vpage-1-0.east) -- (ppage-9.west);
   \draw[->] (vpage-1-1.east) -- (ppage-5.west);
@@ -44,6 +46,6 @@
   \draw[->] (vpage-1-9.east) -- (ppage-10.west);
   \draw[->] (vpage-1-10.east) -- (ppage-11.west);
   \draw[->] (vpage-1-13.east) -- (ppage-11.west);
-  \node[fill=white, rotate=90, inner sep=0pt] at (5.5, -7*0.6) {Second address translation level};
+  \node[fill=white, rotate=90, inner sep=0pt] at (5.5, -7*0.6) {Second level address translation};
 \end{tikzpicture}
 \end{document}
