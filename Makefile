@@ -13,6 +13,8 @@ all: $(LECTURES)
 
 $(LECTURES):
 	cd $(SRC_DIR) && latexmk $(OPTIONS) $@
+	# Remove ".fls" files for some reason places to output dir by latexmk
+	rm -f $(SRC_DIR)/$(PDF_DIR)/$@.fls
 
 clean:
 	cd $(SRC_DIR) && rm -rf $(LOG_DIR) $(PDF_DIR)
