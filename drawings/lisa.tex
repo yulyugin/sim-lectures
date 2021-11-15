@@ -1,35 +1,28 @@
-% This file allows to produce either a separate PDF/PNG image
-% See standalone documentation to understand underlying magic
-
 \documentclass[tikz,convert={density=150,size=600,outext=.png}]{standalone}
-\usetikzlibrary{shapes, calc, arrows, fit, positioning, decorations, patterns, decorations.pathreplacing, chains, snakes}
-\input{../setup-web-fonts}
-\input{../setup-packages}
-\graphicspath{{../pictures/}} % path to pictures, trailing slash is mandatory.
+\usetikzlibrary{shapes, calc, arrows, fit, positioning, decorations, patterns,
+  decorations.pathreplacing, chains, snakes}
 
-% The actual drawing follows
 \begin{document}
-\begin{tikzpicture}[>=latex, font=\small]
-\def\gear{
-    \begin{tikzpicture}
-    \draw[scale=1]
-    \foreach \i in {1,2,...,10} {% draw the gear
-        [rotate=(\i-1)*36]  (0:0.5)  arc (0:12:0.5) -- (18:0.7)  arc (18:30:0.7) --  (36:0.5)
-    };
-    \end{tikzpicture}
-}
-    \node[draw, tape] (src) {Исходное описание}
-    [level distance=2cm, sibling distance=2.5cm, edge from parent/.style={draw, ->}]
-    child {node[] {\gear}
-        child {node {Дизассемблер}}
+  \begin{tikzpicture}[>=latex, font=\small]
+    \def\gear{
+      \begin{tikzpicture}
+        \draw[scale=1]
+        \foreach \i in {1,2,...,10} {% draw the gear
+          [rotate=(\i-1)*36] (0:0.5) arc (0:12:0.5) -- (18:0.7)
+            arc (18:30:0.7) -- (36:0.5)
+        };
+      \end{tikzpicture}
     }
-    child {node[] {\gear}
-        child {node {Симулятор}}
-    }
-    child {node[] {\gear}
-        child {node {Документация}}
-    };
-\end{tikzpicture}
-
-
+    \node[draw, tape] (src) {Source Code} [level distance=2cm,
+      sibling distance=2.5cm, edge from parent/.style={draw, ->}]
+      child {node[] {\gear}
+        child {node {Disassembler}}
+      }
+      child {node[] {\gear}
+        child {node {Simulator}}
+      }
+      child {node[] {\gear}
+        child {node {Documentation}}
+      };
+  \end{tikzpicture}
 \end{document}

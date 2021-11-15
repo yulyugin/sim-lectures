@@ -1,88 +1,162 @@
 \input{../common/config}
 \title{Programming Languages for Model and Hardware Development}
 
+% TODO: Add SystemRDL and SystemVerilog
+
 \begin{document}
 
-\begin{frame}
-\titlepage
-\end{frame}
+\startslides
 
-\section*{Обзор}
-
-\begin{frame}{На прошлой лекции}
-
-\begin{itemize}
-  \item Аналитические модели,
-  \item Трассы (оффлайн модели)
-\end{itemize}
-
-\end{frame}
-
-\begin{frame}{На этой лекции}
-\tableofcontents
-\end{frame} 
-
-\section{Компоненты симулятора}
-
-\begin{frame}
-
-\begin{figure}[htp]
-    \centering
-    \inputpicture{breakdown}
-\end{figure}
-
-\end{frame}
-
-\section{Яызки разработки моделей}
-
-\begin{frame}{Вопрос}
-
-На каком языке программирования должен быть написан симулятор?
-
-\end{frame}
-
-\begin{frame}{Использование языков общего назначения (C, C++, ...)}
-
-\begin{itemize}
-  \item Используется ООП
-  \item Написание моделей <<с нуля>>
-  \item Особенности языков
+\begin{frame}{On the Previous Lecture:}
   \begin{itemize}
-    \item Спацифика int (int32\_t, int64\_t)
-    \item thread safety
-    \item malloc/free
+    \item Models for different devices --- executable and non-executable.
+    \item Functional and cycle-accurate models.
+    \item Virtualization and paravirtualization.
   \end{itemize}
-\end{itemize}
-
 \end{frame}
 
-\begin{frame}{Недостаток}
-
-Низкая скорость разработки!
-
+\begin{frame}{Questions:}
+  \begin{itemize}
+    \item What is a <<magic>> instruction? \pause
+    \item What types of devices are typically paravirtualized? \pause
+    \item What is device pass-through?
+  \end{itemize}
 \end{frame}
 
-\begin{frame}{Решение}
+\section{Simulator Components}
 
-\begin{itemize}
-  \item Создание библиотек, реализующих общие примитивы моделирования (SystemC/TLM).
-  \item Использование специальных языков написания моделей (DML).
-\end{itemize}
-
+\begin{frame}{Simulator Components}
+  \centering
+  \inputpicture{breakdown}
 \end{frame}
 
-\begin{frame}{Сборка модели SystemC}
-
-\begin{figure}[htp]
-    \centering
-    \inputpicture{systemc-compilation}
-\end{figure}
-
+\begin{frame}{Questions}
+  \begin{itemize}
+    \item What programming language should be used to write a simulator? \pause
+    \item What programming language should be used to write models? \pause
+    \item The right answer is --- convenient.
+  \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{Пример SystemC кода}
+\section{Requirements for Model Development}
 
-\begin{lstlisting}[basicstyle=\footnotesize]
+\begin{frame}{Tools and Specifications}
+  \begin{itemize}
+    \item High-level design --- diagrams, queueing models, \dots
+    \item Specification --- text, pseudo-code, examples, \dots
+    \item Function simulator --- ?
+    \item Compiler --- general-purpose programming language.
+    \item Disassembler --- ?
+    \item Cycle-accurate simulator --- ?
+    \item Microcode --- hardware-level instructions.
+    \item Register-transfer level (RTL) --- VHDL/Verilog code.
+    \item Netlist --- components, connectivity, placement and routing of an
+      electric circuit.
+  \end{itemize}
+  \pause
+  \vfill
+  \centering
+  \textbf{All needs to be consistent!}
+\end{frame}
+
+\begin{frame}{General-Purpose Programming Languages}
+  \begin{itemize}
+    \item Object-oriented programming can be used.
+    \item Write a model from scratch every time?
+    \item Language specifics:
+    \begin{itemize}
+      \item int (int32\_t, int64\_t),
+      \item endianness,
+      \item thread safety,
+      \item malloc/free.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Disadvantages}
+  \begin{itemize}
+    \item General-purpose programming languages provide abstractions suitable
+      for wide variety of programs. \pause
+    \item Wrong level of abstractions:
+    \begin{itemize}
+      \item Harder to understand,
+      \item Slower to modify and create,
+      \item More complex debugging.
+    \end{itemize} \pause
+    \item Result --- slow development. \pause
+    \item Software simulation requires more specific concept --- <<hardware
+      abstractions>>.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Hardware Abstractions}
+  \begin{itemize}
+    \item Signals --- logical level (0, 1),
+    \item Bus --- bit groups,
+    \item Bit operations,
+    \item Transactions --- signal direction,
+    \item Extended signal levels --- high-impedance (Z) and unknown (X).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Hardware Abstractions}
+  \begin{itemize}
+    \item Data storage:
+    \begin{itemize}
+      \item Register banks,
+      \item Channels (FIFO),
+      \item Memory banks of different size.
+    \end{itemize}
+    \item Memory maps --- memory access may be handle by different devices
+      depending on address,
+    \item Delays --- varies for different actions.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Solution}
+  \begin{itemize}
+    \item Libraries that implement required abstractions.
+    \item Domain Specific Languages (DSL)
+  \end{itemize}
+  \vfill
+  \pause
+  Examples:
+  \begin{itemize}
+    \item Libraries: SystemC/TLM,
+    \item Languages: DML, LISA, RTL\dots
+  \end{itemize}
+\end{frame}
+
+\section{SystemC}
+
+\begin{frame}{SystemC/TLM}
+  \begin{tabular}{llp{6cm}}
+    Date     & Version & Comments \\
+    \hline
+    Sep 1999 & 0.9     & First version; Cycled based \\
+    Mar 2000 & 1.0     &  Widely accessed major release \\
+    Aug 2002 & 2.0     & Add channels \& events; cleaner syntax \\
+    Apr 2002 & 2.0.1   & Bug fixes; widely used \\
+    Dec 2005 & 2.1.v1  & IEEE approves the IEEE 1666–2005 standard for SystemC \\
+    Jun 2008 & 2.2.05  & TLM-2.0.0 library released  \\
+    Nov 2011 & 2.3.0   & IEEE approves the IEEE 1666–2011 standard for SystemC \\
+  \end{tabular}
+\end{frame}
+
+\begin{frame}{SystemC architecture}
+  \centering
+  \inputpicture{systemc-arch}
+\end{frame}
+
+\begin{frame}{SystemC Compilation}
+  \centering
+  \inputpicture{systemc-compilation}
+\end{frame}
+
+% TODO: Time in SystemC
+
+\begin{frame}[fragile]{Example: SystemC code}
+  \begin{lstlisting}[basicstyle=\footnotesize]
 #include "systemc.h"
 
 SC_MODULE(adder) {        // module (class) declaration
@@ -96,28 +170,35 @@ SC_MODULE(adder) {        // module (class) declaration
     sensitive << a << b;  // sensitivity list of do_add
   }
 };
-\end{lstlisting}
-
+  \end{lstlisting}
 \end{frame}
 
-\begin{frame}{Сборка DML}
+\section{Languagues for Device Modeling}
 
-\begin{figure}[htp]
-    \centering
-    \inputpicture{dml-compilation}
-\end{figure}
-
+\begin{frame}{DML}
+  \begin{itemize}
+    \item Used in Simics for device modeling.
+    \item Abstractions: registers, register fields, methods set/get,
+      discrete events.
+    \item Implementation: source-to-source compilation.
+  \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{Пример кода DML}
+\begin{frame}{DML Compilation}
+  \centering
+  \inputpicture{dml-compilation}
+\end{frame}
 
-\begin{lstlisting}
+% TODO: Use modern DML
+
+\begin{frame}[fragile]{Example: DML code}
+  \begin{lstlisting}
 dml 1.2;
 
 device simple_dml_device;
 
-parameter desc = “Simple DML device”;
-parameter documentation = “This is an implementation of simple DML device.”;
+parameter desc = "Simple DML device";
+parameter documentation = "This is an implementation of simple DML device.";
 
 bank regs {
   parameter register_size = 4;
@@ -125,150 +206,110 @@ bank regs {
   register r1 @ 0x1000;
   register r2 @ 0x1004;
 }
-\end{lstlisting}
-
+  \end{lstlisting}
 \end{frame}
 
-\begin{frame}{Требования к языку}
-
-Абстракции ЯВО применимы для широкого класса программ.
-
-Области моделирования аппаратуры используют более узкий набор понятий --- <<абстракций аппаратуры>>.
-
+\begin{frame}{SimGen}
+  SimGen~\cite{Larsson-SimGen}:
+  \begin{itemize}
+    \item Used in Simics for processor modeling.
+    \item Abstractions: instructions, opcode fields, mnemonics, semantics.
+    \item Implementation: source-to-source compilation.
+  \end{itemize}
 \end{frame}
 
-\begin{frame}{Абстракции аппаратуры}
-
-\begin{itemize}
-    \item Сигналы --- логический уровень (0 или 1),
-    \item Шины --- передача группы бит,
-    \item Операции над отдельными битами,
-    \item Транзакции --- отображение направления сигнала (отправителя и получателя),
-    \item Расширенный значения для уровней сигналов: непроводяций (hi-Z) или неопределенный (X),
-\end{itemize}
-
+\begin{frame}[fragile]{Example: SimGen code}
+  \begin{lstlisting}
+instruction branch_e_O_A_P(disp22)
+  pattern
+    op==0 && op2==2 && cond==1 && a==1 && mode==0 && onpage==1
+  syntax
+    "be,a0x{lx:PC+4*disp22)}"
+  semantics
+  #{
+    if(rCMP_VALUE_A==rCMP_VALUE_B)
+      JUMP_REL_ON_PAGE_N(disp22);
+    annull_epilogue();
+  #}
+  \end{lstlisting}
 \end{frame}
 
-\begin{frame}{Абстракции аппаратуры}
-
-\begin{itemize}
-    \item Абстракции хранения данных:
-    \begin{itemize}
-        \item Группы регистров,
-        \item Каналы (FIFO),
-        \item Банки памяти различного размера.
-    \end{itemize}
-    \item Карты памяти --- обращение в память может быть обработано различными устройствами в зависимости от адреса,
-    \item Задержки событий --- разные для различных действий.
-\end{itemize}
-
+\begin{frame}{Language for Instruction Set Architecture --- LISA}
+  \begin{itemize}
+    \item LISA 1.0 is released in 1997~\cite{Zivojnovic-LISA},
+    \item LISA 2.0 is part of Synopsis Processor Designer.
+  \end{itemize}
+  \vfill
+  \centering
+  \inputpicture{lisa}
 \end{frame}
 
-\section{Разработка процессора}
-
-\begin{frame}{Проблемы}
-
-Инструменты и документы, успользуемые при создании процессора:
-
-\begin{itemize}
-    \item Функциональный симулятор набора инструкций,
-    \item Точная потактовая модель,
-    \item Дизассемблер машинного кода,
-    \item Компилятор с языка высого уровня в ассемблерный код,
-    \item Документация к аппаратуре
-    \item Синтезируемое описание новой архитектуры.
-\end{itemize}
-
+\begin{frame}{Languages for Model Development --- Pros and Cons}
+  \begin{itemize}
+    \item[$-$] Generated code is not optimal,
+    \item[$-$] Generated code is not compact,
+    \item[$-$] Learning curve for the new languages.
+    \item[$+$] Higher development and modification speed,
+    \item[$+$] Consistensy for all components.
+  \end{itemize}
 \end{frame}
 
-\begin{frame}{Языки разработки набора команд}
+\section{Hardware Development}
 
-\begin{columns}[t]
-    \begin{column}[T]{0.7\textwidth}
-    \begin{figure}
-        \centering
-        \inputpicture{lisa}
-    \end{figure}
-    \end{column}
-
-    \begin{column}[T]{0.3\textwidth}
-        Примеры:
-        \begin{itemize}
-            \item LISA,
-            \item ISDL,
-            \item SimGen.
-        \end{itemize}
-    \end{column}
-\end{columns}
-
-\end{frame}
-
-\begin{frame}{Преимущества и недостатки}
-
-\begin{columns}[t]
-    \begin{column}[T]{0.5\textwidth}
-    Недостатки:
-    \begin{itemize}
-        \item Генерируется не самый быстрый код,
-        \item Код может быть не компактен,
-        \item Модель может работать медленне.
-    \end{itemize}
-    \end{column}
-    \begin{column}[T]{0.5\textwidth}
-    Преимущества:
-    \begin{itemize}
-        \item Скорость создания/модификации,
-        \item Согласованность.
-    \end{itemize}
-    \end{column}
-\end{columns}
-
-\end{frame}
+% TODO: Cite for Verilog
 
 \begin{frame}{Verilog}
-
-Создатели Phil Moorby \& Prabhu Goel, работавшие в «Automated Integrated Design Systems», 1984 г.
-
-Позволяет генерировать netlist --- логически эквивалентное описание, состоящее из элементарных логических примитивов.
-
-Команды делятся на два типа:
-
-\begin{itemize}
-    \item Синтезируемые --- представленные в аппаратуре,
-    \item Несинтезируемые --- для отладки и симуляции.
-\end{itemize}
-
+  \begin{itemize}
+    \item Created at <<Automated Integrated Design System>> by Phil Moorby \&
+      Prabhu Goel in 1984,
+    \item Can generate netlist.
+    \item Verilog constructs:
+    \begin{itemize}
+      \item Synthesizable --- can be implemented in hardware,
+      \item Non-synthesizable --- for debug and simulation.
+    \end{itemize}
+  \end{itemize}
 \end{frame}
+
+% TODO: Verilog code example
+
+% TODO: Cite for VHDL
 
 \begin{frame}{VHDL}
-
-\begin{itemize}
-    \item Был разработан в 1983 г. по заказу Министерства обороны США,
-    \item Первоначально предназначался для моделирования, но позже появилась и синтезируемое подмножество.
-\end{itemize}
-
+  \begin{itemize}
+    \item Developed in 1983,
+    \item Developed at the behest of the U.S. Department of Defense,
+    \item Initially aimed for simulation,
+    \item Later extended with synthesizable subset.
+  \end{itemize}
 \end{frame}
 
-% Use [fragile] option to insert listings
-% \begin{frame}[fragile]
+% TODO: VHDL code example
 
-\section*{Конец}
-% The final "thank you" frame 
+\section*{Conclusions}
 
-\begin{frame}{На следующей лекции}
-
-Итоговая контрольная работа.
-
+\begin{frame}[allowframebreaks]{Bibliography}
+  \nocite{Hadjiyiannis-ISDL}
+  \nocite{Schliebusch-LISA}
+  \nocite{Nikhil-BSV}
+  \printbibliography
 \end{frame}
 
-\begin{frame}
-
-{\huge{Спасибо за внимание!}\par}
-
-\vfill
-
-\tiny{\textit{Замечание}: все торговые марки и логотипы, использованные в данном материале, являются собственностью их владельцев. Представленная здесь точка зрения отражает личное мнение автора, не выступающего от лица какой-либо организации.}
-
+\begin{frame}{Conclusions}
+  \begin{itemize}
+    \item Model development should be done using <<convenient>> language.
+    \item General-purpose languages don't have right abstractions.
+    \item Solution:
+    \begin{itemize}
+      \item Libraries implementing required abstractions,
+      \item Domain specific languages.
+    \end{itemize}
+  \end{itemize}
 \end{frame}
+
+\begin{frame}{On the Next Lecture:}
+\end{frame}
+
+\finalslide
 
 \end{document}
