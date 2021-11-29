@@ -98,7 +98,7 @@
     \item Using critical sections.
     \begin{itemize}
       \item Atomic instruction acquires a lock before memory access \pause
-        \dots{} does not work. See~\cite{coremu}.
+        \dots{} does not work. See~\cite{wang-coremu}.
       \item Every memory access acquires a lock --- works but slow. \pause
       \item Coherency protocols for memory regions. Like MESI for caches. \pause
     \end{itemize}
@@ -111,9 +111,9 @@
   \end{enumerate}
 \end{frame}
 
-\subsection{Memory Models}
+\subsection{Memory Consistency Model}
 
-\begin{frame}{Memory Consistency Models}
+\begin{frame}{Memory Consistency Model}
   \begin{itemize}
     \item There are several buffers (caches, queues) between CPU and RAM.
     \item CPUs in a shared memory system may <<see>> different values of the
@@ -135,33 +135,149 @@
   % TODO: Convert the table to LaTex
   \includegraphics[height=0.8\textheight]{barrier-arch.png}
 
-  \tiny{Summary of memory ordering~\cite{whymb}}
+  \tiny{Summary of memory ordering~\cite{mckenney-memory-barriers}}
+\end{frame}
+
+\section{Parallel Discrete Event Simulation}
+
+\begin{frame}{DES}
+  Multiple asynchronous devices --- DES using single thread.
+  \vfill
+  \centering
+  \inputpicture{des}
+\end{frame}
+
+\begin{frame}{Naive PDES}
+  \begin{itemize}
+    \item Two target processors. Each processor has its own queue.
+    \item Processors post events in other's queue for communication. \pause
+    \item Causality is violated.
+  \end{itemize}
+  \centering
+  \inputpicture{pdes-two-queues}
+\end{frame}
+
+\begin{frame}{PDES with Time Stamps}
+  \begin{itemize}
+    \item On send: add time stamp.
+    \item On receive: check the time stamp, adjust or report an error.
+  \end{itemize}
+  \centering
+  \inputpicture{pdes-time-stamps}
+\end{frame}
+
+\begin{frame}{Conservative and Optimistic Approaches}
+  How to deal with casusality voilations?
+  \begin{itemize}
+    \item Conservative --- avoid causality violations.
+    \item Optimistic --- detect and fix causality violations.
+  \end{itemize}
+\end{frame}
+
+\subsection{Conservative Approach}
+
+\begin{frame}{Conservative Approach}
+  \begin{itemize}
+    \item Block sender until receiver handles the connected event.
+    \item Do not allow <<fast>> threads to get through comunication stages.
+  \end{itemize}
+  \centering
+  \inputpicture{pdes-send-and-block}
+\end{frame}
+
+\begin{frame}{Deadlock}
+  \centering
+  \inputpicture{pdes-deadlock}
+\end{frame}
+
+\begin{frame}{Recovery from Deadlocks}
+  If deadlock is detected it is safe to free one of the threads:
+  \begin{itemize}
+    \item The best choise --- thread with the smallest simulated time.
+    \item Possbile situation: one thread runs most of the time, others wait
+      $\Rightarrow$ no benifits from parallelism.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Is It Possbile to Avoid Blocking?}
+  \begin{itemize}
+    \item Blocking is needed because the threads do not know each other's
+      progress.
+    \item How can thread A get local time of thread B? \pause
+    \item Though a time stamp stored in a event from thread B.
+    \item Solution: send \textit{null} message.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Synchronization Domains}
+  \centering
+  \inputpicture{synchronization-domains}
+\end{frame}
+
+\subsection{Optimistic Approach}
+
+\begin{frame}{Optimistic Approach}
+  \begin{enumerate}
+    \item Run with no blocking,
+    \item Periodically save system state,
+    \item Revert to the last checkpoint if causality error is detected.
+    \item Execute the problematic section using conservative approach.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Checkpoints}
+  \centering
+  \inputpicture{checkpoints}
 \end{frame}
 
 \section*{Conclusion}
 
-\begin{frame}{Parallel Simulators}
+\begin{frame}{Parallel Simulation Problems}
   \begin{itemize}
-    \item Simics
-    \item Graphite
-    \item SimOS
-    \item Coremu
-    \item Pqemu
-    \item BigSim
-    \item DynamoRIO
+    \item Non-deterministic execution,
+    \item Parallel execution does not guarantee speedup. \pause
+    \item Parallel execution can be even slower than sequential!
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Is It Even Worse Trying to Parallize?}
+  \begin{itemize}
+    \item Do the simulated workloads take incredibly long amount of time to
+      complete?
+    \item Do the simulated workloads run sequential or parallel code?
+    \item Do the simulated threads interact a lot? \pause
+    \item Would the amount of time it takes to build parallel simulator be
+      worth the speedup?
   \end{itemize}
 \end{frame}
 
 \begin{frame}{Conclusion}
+  \begin{itemize}
+    \item Multi-processor simulation on multi-processor system.
+    \item Parallel discrete event simulation. \pause
+    \item Think well before even trying to do parallel simulation!
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Parallel Simulators}
+  \begin{itemize}
+    \item Simics,
+    \item Graphite,
+    \item SimOS,
+    \item Coremu,
+    \item Pqemu,
+    \item BigSim,
+    \item DynamoRIO.
+  \end{itemize}
 \end{frame}
 
 \begin{frame}[allowframebreaks]{Bibliography}
-  \begin{thebibliography}{99}
-    \bibitem{coremu} \textit{Zhaoguo Wang et al.} COREMU: a Scalable and Portable Parallel Full-System Emulator \url{http://ppi.fudan.edu.cn/_media/publications\%3Bcoremu-ppopp11.pdf},
-    \bibitem{consistency-report} \textit{Kourosh Gharachorloo} Memory Consistency Models for Shared-Memory Multiprocessors. \url{http://infolab.stanford.edu/pub/cstr/reports/csl/tr/95/685/CSL-TR-95-685.pdf}
-    \bibitem{whymb} \textit{Paul E. McKenney} Memory Barriers: a Hardware View for Software Hackers \url{http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.152.5245}
-    \bibitem{pqemu} \textit{Jiun-Hung Ding et al.} PQEMU: A Parallel System Emulator Based on QEMU \url{http://dx.doi.org/10.1109/ICPADS.2011.102}
-  \end{thebibliography}
+  \nocite{gharachorloo-memory-consistency}
+  \nocite{ding-pqemu}
+  \nocite{fujimoto-pdes}
+  \nocite{liu-pdes}
+  \nocite{misra-ddes}
+  \printbibliography
 \end{frame}
 
 \finalslide
