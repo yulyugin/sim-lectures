@@ -7,10 +7,10 @@
 \startslides
 
 \begin{frame}{On the Previous Lecture:}
-  Programming languages for model developemnt:
+  Programming languages for model development:
   \begin{itemize}
-    \item Requirements and abstructions.
-    \item Libabries: SystemC.
+    \item Requirements and abstractions.
+    \item Libraries: SystemC.
     \item Domain specific languages: DML, SimGen, LISA.
     \item Languages for hardware development: VHDL, Verilog.
   \end{itemize}
@@ -89,7 +89,7 @@
     \begin{itemize}
       \item Different ISAs for atomic instructions (Intel IA-32 --- 10+ atomic
         instructions, ARM --- two).
-      \item Usefull when target and host architectures match. \pause
+      \item Useful when target and host architectures match. \pause
     \end{itemize}
     \item Using critical sections.
     \begin{itemize}
@@ -101,7 +101,7 @@
     \item Using transactions.
     \begin{itemize}
       \item Detect races instead of avoiding them.
-      \item Repeat atmoic operation in case of failure.
+      \item Repeat atomic operation in case of failure.
       \item Implemented using host atomic compare-and-swap.
     \end{itemize}
   \end{enumerate}
@@ -122,13 +122,13 @@
       memory operations.
     \item Examples Intel\reg~IA-32: \texttt{sfence}, \texttt{lfence},
       \texttt{mfence}.
-    \item NOTE: atomic instructions are not necesserely memory barriers!
+    \item NOTE: atomic instructions are not necessarily memory barriers!
   \end{itemize}
 \end{frame}
 
 \begin{frame}{Memory Ordering for Different Architectures}
   \centering
-  % TODO: Convert the table to LaTex
+  % TODO: Convert the table to LaTeX
   \includegraphics[height=0.8\textheight]{barrier-arch.png}
 
   \tiny{Summary of memory ordering~\cite{mckenney-memory-barriers}}
@@ -163,7 +163,7 @@
 \end{frame}
 
 \begin{frame}{Conservative and Optimistic Approaches}
-  How to deal with casusality voilations?
+  How to deal with causality violations?
   \begin{itemize}
     \item Conservative --- avoid causality violations.
     \item Optimistic --- detect and fix causality violations.
@@ -175,7 +175,7 @@
 \begin{frame}{Conservative Approach}
   \begin{itemize}
     \item Block sender until receiver handles the connected event.
-    \item Do not allow <<fast>> threads to get through comunication stages.
+    \item Do not allow <<fast>> threads to get through communication stages.
   \end{itemize}
   \centering
   \inputpicture{pdes-send-and-block}
@@ -189,13 +189,13 @@
 \begin{frame}{Recovery from Deadlocks}
   If deadlock is detected it is safe to free one of the threads:
   \begin{itemize}
-    \item The best choise --- thread with the smallest simulated time.
-    \item Possbile situation: one thread runs most of the time, others wait
-      $\Rightarrow$ no benifits from parallelism.
+    \item The best choice --- thread with the smallest simulated time.
+    \item Possible situation: one thread runs most of the time, others wait
+      $\Rightarrow$ no benefits from parallelism.
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Is It Possbile to Avoid Blocking?}
+\begin{frame}{Is It Possible to Avoid Blocking?}
   \begin{itemize}
     \item Blocking is needed because the threads do not know each other's
       progress.
@@ -236,7 +236,7 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Is It Even Worse Trying to Parallize?}
+\begin{frame}{Is It Even Worse Trying to Parallelize?}
   \begin{itemize}
     \item Do the simulated workloads take incredibly long amount of time to
       complete?
