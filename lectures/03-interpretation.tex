@@ -197,10 +197,14 @@ Output:
 \end{frame}
 
 \begin{frame}{Decode: harsh reality}
-\begin{itemize}
-\item Variable instruction lenght. Intel\reg~IA-32: from 1 to 15 bytes. How many bytes to decode at once?
-\item Decoding results depends of prefixes and execution mode. Example: 0x40-0x4f in Intel\reg~IA-32/Intel\reg~64/AMD64.
-\end{itemize}
+  \begin{itemize}
+    \item Variable lenght is used in most modern ISAs for compactness.
+      Example: from 1 to 15 bytes in Intel\reg~IA-32. \\
+      % TODO: More examples. 16,32,48 all together are common.
+      How many bytes to decode at once?
+    \item Decoding results depends of prefixes and execution mode.
+      Example: 0x40-0x4f in Intel\reg~IA-32/Intel\reg~64/AMD64.
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{Disassemble}
@@ -238,6 +242,9 @@ typedef struct {
 } cpu_t;
 \end{lstlisting}
 \end{frame}
+
+% TODO: Add a slide with a screenshot from RISC-V manual in order to show
+% how specification is getting converted to simulator's code.
 
 \begin{frame}[fragile]{Example: ADD reg reg reg}
 \begin{lstlisting}

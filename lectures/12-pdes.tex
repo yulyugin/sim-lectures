@@ -2,6 +2,9 @@
 
 \title{Parallel Simulation for Multi-Processor Guest Systems}
 
+% TODO: Be clearer on deadlocks in the simulator vs in the simulated system.
+% Two different things.
+
 \begin{document}
 
 \startslides
@@ -165,6 +168,7 @@
 \begin{frame}{Conservative and Optimistic Approaches}
   How to deal with causality violations?
   \begin{itemize}
+    % TODO: add "full speed ahead" - never mind, they do not hurt all that much.
     \item Conservative --- avoid causality violations.
     \item Optimistic --- detect and fix causality violations.
   \end{itemize}

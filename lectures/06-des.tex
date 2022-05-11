@@ -1,6 +1,18 @@
 \input{../common/config}
 \title{Event-Driver Simulation. Multi-processor Simulation}
 
+% TODO: It would be good to explain how hardware works in a bit more detail
+% Then map that to events vs continuous processes.
+% The word "transaction" is missing. It should be in here.
+%
+% Would also be good with a diagram explaining the model of execution with
+% different devices tied to different processors like it is in Simics, vs
+% single global time. That is a fundamental design choice.
+%
+% Question of truth in the simulator - Simics lets whatever is the result be
+% the result vs. quite a few academic approaches that instead try to detect
+% causal violations from temporal decoupling and roll back.
+
 \begin{document}
 
 \startslides
