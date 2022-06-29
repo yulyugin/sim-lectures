@@ -14,7 +14,7 @@ Presentation for "Fundamentals of Full-Platform Simulation" MIPT course.
 1. Simulation of Architectural State.
 1. Cycle Accurate Simulation.
 1. Virtualization.
-1. Paravirtualization - Connecting Real Word With Simulation.
+1. Paravirtualization - Connecting Real Word with Simulation.
 1. Programming Languages for Model and Hardware Development.
 1. Parallel DES.
 
